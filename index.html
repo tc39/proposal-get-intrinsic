@@ -1,9 +1,9 @@
 <!doctype html>
 <head><meta charset="utf-8">
-<link rel="stylesheet" href="./spec.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/styles/base16/solarized-light.min.css"><link rel="stylesheet" href="./spec.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
-<title>Proposal Title Goes Here</title><script>'use strict';
+<title>Get Intrinsic</title><script>'use strict';
 let sdoBox = {
   init() {
     this.$alternativeId = null;
@@ -570,24 +570,6 @@ Menu.prototype.selectPin = function (num) {
 };
 
 let menu;
-function init() {
-  menu = new Menu();
-  let $container = document.getElementById('spec-container');
-  $container.addEventListener(
-    'mouseover',
-    debounce(e => {
-      Toolbox.activateIfMouseOver(e);
-    })
-  );
-  document.addEventListener(
-    'keydown',
-    debounce(e => {
-      if (e.code === 'Escape' && Toolbox.active) {
-        Toolbox.deactivate();
-      }
-    })
-  );
-}
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -610,18 +592,17 @@ function debounce(fn, opts) {
 }
 
 let CLAUSE_NODES = ['EMU-CLAUSE', 'EMU-INTRO', 'EMU-ANNEX'];
-function findLocalReferences($elem) {
-  let name = $elem.innerHTML;
-  let references = [];
-
+function findContainer($elem) {
   let parentClause = $elem.parentNode;
   while (parentClause && CLAUSE_NODES.indexOf(parentClause.nodeName) === -1) {
     parentClause = parentClause.parentNode;
   }
+  return parentClause;
+}
 
-  if (!parentClause) return;
-
+function findLocalReferences(parentClause, name) {
   let vars = parentClause.querySelectorAll('var');
+  let references = [];
 
   for (let i = 0; i < vars.length; i++) {
     let $var = vars[i];
@@ -634,15 +615,32 @@ function findLocalReferences($elem) {
   return references;
 }
 
+let REFERENCED_CLASSES = Array.from({ length: 7 }, (x, i) => `referenced${i}`);
+function chooseHighlightIndex(parentClause) {
+  let counts = REFERENCED_CLASSES.map($class => parentClause.getElementsByClassName($class).length);
+  // Find the earliest index with the lowest count.
+  let minCount = Infinity;
+  let index = null;
+  for (let i = 0; i < counts.length; i++) {
+    if (counts[i] < minCount) {
+      minCount = counts[i];
+      index = i;
+    }
+  }
+  return index;
+}
+
 function toggleFindLocalReferences($elem) {
-  let references = findLocalReferences($elem);
+  let parentClause = findContainer($elem);
+  let references = findLocalReferences(parentClause, $elem.innerHTML);
   if ($elem.classList.contains('referenced')) {
     references.forEach($reference => {
-      $reference.classList.remove('referenced');
+      $reference.classList.remove('referenced', ...REFERENCED_CLASSES);
     });
   } else {
+    let index = chooseHighlightIndex(parentClause);
     references.forEach($reference => {
-      $reference.classList.add('referenced');
+      $reference.classList.add('referenced', `referenced${index}`);
     });
   }
 }
@@ -721,126 +719,6 @@ function fuzzysearch(searchString, haystack, caseInsensitive) {
 
   return { caseMatch: !caseInsensitive, chunks, prefix: j <= qlen };
 }
-
-let Toolbox = {
-  init() {
-    this.$outer = document.createElement('div');
-    this.$outer.classList.add('toolbox-container');
-    this.$container = document.createElement('div');
-    this.$container.classList.add('toolbox');
-    this.$outer.appendChild(this.$container);
-    this.$permalink = document.createElement('a');
-    this.$permalink.textContent = 'Permalink';
-    this.$pinLink = document.createElement('a');
-    this.$pinLink.textContent = 'Pin';
-    this.$pinLink.setAttribute('href', '#');
-    this.$pinLink.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      menu.togglePinEntry(this.entry.id);
-    });
-
-    this.$refsLink = document.createElement('a');
-    this.$refsLink.setAttribute('href', '#');
-    this.$refsLink.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      referencePane.showReferencesFor(this.entry);
-    });
-    this.$container.appendChild(this.$permalink);
-    this.$container.appendChild(this.$pinLink);
-    this.$container.appendChild(this.$refsLink);
-    document.body.appendChild(this.$outer);
-  },
-
-  activate(el, entry, target) {
-    if (el === this._activeEl) return;
-    sdoBox.deactivate();
-    this.active = true;
-    this.entry = entry;
-    this.$outer.classList.add('active');
-    this.top = el.offsetTop - this.$outer.offsetHeight;
-    this.left = el.offsetLeft - 10;
-    this.$outer.setAttribute('style', 'left: ' + this.left + 'px; top: ' + this.top + 'px');
-    this.updatePermalink();
-    this.updateReferences();
-    this._activeEl = el;
-    if (this.top < document.body.scrollTop && el === target) {
-      // don't scroll unless it's a small thing (< 200px)
-      this.$outer.scrollIntoView();
-    }
-  },
-
-  updatePermalink() {
-    this.$permalink.setAttribute('href', makeLinkToId(this.entry.id));
-  },
-
-  updateReferences() {
-    this.$refsLink.textContent = `References (${this.entry.referencingIds.length})`;
-  },
-
-  activateIfMouseOver(e) {
-    let ref = this.findReferenceUnder(e.target);
-    if (ref && (!this.active || e.pageY > this._activeEl.offsetTop)) {
-      let entry = menu.search.biblio.byId[ref.id];
-      this.activate(ref.element, entry, e.target);
-    } else if (
-      this.active &&
-      (e.pageY < this.top || e.pageY > this._activeEl.offsetTop + this._activeEl.offsetHeight)
-    ) {
-      this.deactivate();
-    }
-  },
-
-  findReferenceUnder(el) {
-    while (el) {
-      let parent = el.parentNode;
-      if (el.nodeName === 'EMU-RHS' || el.nodeName === 'EMU-PRODUCTION') {
-        return null;
-      }
-      if (
-        el.nodeName === 'H1' &&
-        parent.nodeName.match(/EMU-CLAUSE|EMU-ANNEX|EMU-INTRO/) &&
-        parent.id
-      ) {
-        return { element: el, id: parent.id };
-      } else if (el.nodeName === 'EMU-NT') {
-        if (
-          parent.nodeName === 'EMU-PRODUCTION' &&
-          parent.id &&
-          parent.id[0] !== '_' &&
-          parent.firstElementChild === el
-        ) {
-          // return the LHS non-terminal element
-          return { element: el, id: parent.id };
-        }
-        return null;
-      } else if (
-        el.nodeName.match(/EMU-(?!CLAUSE|XREF|ANNEX|INTRO)|DFN/) &&
-        el.id &&
-        el.id[0] !== '_'
-      ) {
-        if (
-          el.nodeName === 'EMU-FIGURE' ||
-          el.nodeName === 'EMU-TABLE' ||
-          el.nodeName === 'EMU-EXAMPLE'
-        ) {
-          // return the figcaption element
-          return { element: el.children[0].children[0], id: el.id };
-        } else {
-          return { element: el, id: el.id };
-        }
-      }
-      el = parent;
-    }
-  },
-
-  deactivate() {
-    this.$outer.classList.remove('active');
-    this._activeEl = null;
-    this.active = false;
-  },
-};
 
 let referencePane = {
   init() {
@@ -981,6 +859,126 @@ let referencePane = {
   },
 };
 
+let Toolbox = {
+  init() {
+    this.$outer = document.createElement('div');
+    this.$outer.classList.add('toolbox-container');
+    this.$container = document.createElement('div');
+    this.$container.classList.add('toolbox');
+    this.$outer.appendChild(this.$container);
+    this.$permalink = document.createElement('a');
+    this.$permalink.textContent = 'Permalink';
+    this.$pinLink = document.createElement('a');
+    this.$pinLink.textContent = 'Pin';
+    this.$pinLink.setAttribute('href', '#');
+    this.$pinLink.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      menu.togglePinEntry(this.entry.id);
+    });
+
+    this.$refsLink = document.createElement('a');
+    this.$refsLink.setAttribute('href', '#');
+    this.$refsLink.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      referencePane.showReferencesFor(this.entry);
+    });
+    this.$container.appendChild(this.$permalink);
+    this.$container.appendChild(this.$pinLink);
+    this.$container.appendChild(this.$refsLink);
+    document.body.appendChild(this.$outer);
+  },
+
+  activate(el, entry, target) {
+    if (el === this._activeEl) return;
+    sdoBox.deactivate();
+    this.active = true;
+    this.entry = entry;
+    this.$outer.classList.add('active');
+    this.top = el.offsetTop - this.$outer.offsetHeight;
+    this.left = el.offsetLeft - 10;
+    this.$outer.setAttribute('style', 'left: ' + this.left + 'px; top: ' + this.top + 'px');
+    this.updatePermalink();
+    this.updateReferences();
+    this._activeEl = el;
+    if (this.top < document.body.scrollTop && el === target) {
+      // don't scroll unless it's a small thing (< 200px)
+      this.$outer.scrollIntoView();
+    }
+  },
+
+  updatePermalink() {
+    this.$permalink.setAttribute('href', makeLinkToId(this.entry.id));
+  },
+
+  updateReferences() {
+    this.$refsLink.textContent = `References (${this.entry.referencingIds.length})`;
+  },
+
+  activateIfMouseOver(e) {
+    let ref = this.findReferenceUnder(e.target);
+    if (ref && (!this.active || e.pageY > this._activeEl.offsetTop)) {
+      let entry = menu.search.biblio.byId[ref.id];
+      this.activate(ref.element, entry, e.target);
+    } else if (
+      this.active &&
+      (e.pageY < this.top || e.pageY > this._activeEl.offsetTop + this._activeEl.offsetHeight)
+    ) {
+      this.deactivate();
+    }
+  },
+
+  findReferenceUnder(el) {
+    while (el) {
+      let parent = el.parentNode;
+      if (el.nodeName === 'EMU-RHS' || el.nodeName === 'EMU-PRODUCTION') {
+        return null;
+      }
+      if (
+        el.nodeName === 'H1' &&
+        parent.nodeName.match(/EMU-CLAUSE|EMU-ANNEX|EMU-INTRO/) &&
+        parent.id
+      ) {
+        return { element: el, id: parent.id };
+      } else if (el.nodeName === 'EMU-NT') {
+        if (
+          parent.nodeName === 'EMU-PRODUCTION' &&
+          parent.id &&
+          parent.id[0] !== '_' &&
+          parent.firstElementChild === el
+        ) {
+          // return the LHS non-terminal element
+          return { element: el, id: parent.id };
+        }
+        return null;
+      } else if (
+        el.nodeName.match(/EMU-(?!CLAUSE|XREF|ANNEX|INTRO)|DFN/) &&
+        el.id &&
+        el.id[0] !== '_'
+      ) {
+        if (
+          el.nodeName === 'EMU-FIGURE' ||
+          el.nodeName === 'EMU-TABLE' ||
+          el.nodeName === 'EMU-EXAMPLE'
+        ) {
+          // return the figcaption element
+          return { element: el.children[0].children[0], id: el.id };
+        } else {
+          return { element: el, id: el.id };
+        }
+      }
+      el = parent;
+    }
+  },
+
+  deactivate() {
+    this.$outer.classList.remove('active');
+    this._activeEl = null;
+    this.active = false;
+  },
+};
+
 function sortByClauseNumber(clause1, clause2) {
   let c1c = clause1.number.split('.');
   let c2c = clause2.number.split('.');
@@ -1027,6 +1025,56 @@ function makeLinkToId(id) {
   return (targetSec === 'index' ? './' : targetSec + '.html') + hash;
 }
 
+function doShortcut(e) {
+  if (!(e.target instanceof HTMLElement)) {
+    return;
+  }
+  let target = e.target;
+  let name = target.nodeName.toLowerCase();
+  if (name === 'textarea' || name === 'input' || name === 'select' || target.isContentEditable) {
+    return;
+  }
+  if (e.key === 'm' && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && usesMultipage) {
+    let pathParts = location.pathname.split('/');
+    let hash = location.hash;
+    if (pathParts[pathParts.length - 2] === 'multipage') {
+      if (hash === '') {
+        let sectionName = pathParts[pathParts.length - 1];
+        if (sectionName.endsWith('.html')) {
+          sectionName = sectionName.slice(0, -5);
+        }
+        if (idToSection['sec-' + sectionName] !== undefined) {
+          hash = '#sec-' + sectionName;
+        }
+      }
+      location = pathParts.slice(0, -2).join('/') + '/' + hash;
+    } else {
+      location = 'multipage/' + hash;
+    }
+  }
+}
+
+function init() {
+  menu = new Menu();
+  let $container = document.getElementById('spec-container');
+  $container.addEventListener(
+    'mouseover',
+    debounce(e => {
+      Toolbox.activateIfMouseOver(e);
+    })
+  );
+  document.addEventListener(
+    'keydown',
+    debounce(e => {
+      if (e.code === 'Escape' && Toolbox.active) {
+        Toolbox.deactivate();
+      }
+    })
+  );
+}
+
+document.addEventListener('keypress', doShortcut);
+
 document.addEventListener('DOMContentLoaded', () => {
   Toolbox.init();
   referencePane.init();
@@ -1064,7 +1112,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let sdoMap = JSON.parse(`{}`);
-let biblio = JSON.parse(`{"refsByClause":{"sec-demo-clause":["_ref_0"]},"entries":[{"type":"clause","id":"sec-demo-clause","aoid":null,"titleHTML":"This is an emu-clause","number":"1","referencingIds":[],"key":"This is an emu-clause"},{"type":"clause","id":"sec-copyright-and-software-license","aoid":null,"titleHTML":"Copyright &amp; Software License","number":"A","referencingIds":[],"key":"Copyright & Software License"}]}`);</script><style>body {
+let biblio = JSON.parse(`{"refsByClause":{"sec-getintrinsic":["_ref_0"],"sec-isfinite-number":["_ref_1"]},"entries":[{"type":"clause","id":"sec-placeholder1","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"1","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder2","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"2","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder3","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"3","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder4","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"4","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder5","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"5","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder6","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"6","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder7","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"7","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder8","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"8","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder9","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"9","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderA","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"10","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderB","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"11","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderC","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"12","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderD","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"13","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderE","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"14","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderF","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"15","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderG","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"16","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderH","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"17","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderI","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"18","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderJ","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.1","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderK","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.2","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.3.1","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"term","term":"%getIntrinsic%","refId":"sec-getintrinsic","referencingIds":[],"key":"%getIntrinsic%"},{"type":"clause","id":"sec-getintrinsic","aoid":null,"titleHTML":"getIntrinsic ( <var>name</var> )","number":"19.3.2","referencingIds":[],"key":"getIntrinsic ( name )"},{"type":"term","term":"%isFinite%","refId":"sec-isfinite-number","referencingIds":[],"key":"%isFinite%"},{"type":"clause","id":"sec-isfinite-number","aoid":null,"titleHTML":"isFinite ( <var>number</var> )","number":"19.3.3","referencingIds":[],"key":"isFinite ( number )"},{"type":"clause","id":"sec-function-properties-of-the-global-object","aoid":null,"titleHTML":"Function Properties of the Global Object","number":"19.3","referencingIds":[],"key":"Function Properties of the Global Object"},{"type":"clause","id":"sec-value-properties-of-the-global-object","aoid":null,"titleHTML":"Value Properties of the Global Object","number":"19","referencingIds":[],"key":"Value Properties of the Global Object"},{"type":"clause","id":"sec-copyright-and-software-license","aoid":null,"titleHTML":"Copyright &amp; Software License","number":"A","referencingIds":[],"key":"Copyright & Software License"}]}`);
+;let usesMultipage = false</script><style>body {
   display: flex;
   font-size: 18px;
   line-height: 1.5;
@@ -1133,8 +1182,40 @@ var {
   cursor: pointer;
 }
 
-var.referenced {
+var.referenced0 {
+  color: inherit;
   background-color: #ffff33;
+  box-shadow: 0 0 0 2px #ffff33;
+}
+var.referenced1 {
+  color: inherit;
+  background-color: #ff87a2;
+  box-shadow: 0 0 0 2px #ff87a2;
+}
+var.referenced2 {
+  color: inherit;
+  background-color: #96e885;
+  box-shadow: 0 0 0 2px #96e885;
+}
+var.referenced3 {
+  color: inherit;
+  background-color: #3eeed2;
+  box-shadow: 0 0 0 2px #3eeed2;
+}
+var.referenced4 {
+  color: inherit;
+  background-color: #eacfb6;
+  box-shadow: 0 0 0 2px #eacfb6;
+}
+var.referenced5 {
+  color: inherit;
+  background-color: #82ddff;
+  box-shadow: 0 0 0 2px #82ddff;
+}
+var.referenced6 {
+  color: inherit;
+  background-color: #ffbcf2;
+  box-shadow: 0 0 0 2px #ffbcf2;
 }
 
 emu-const {
@@ -2193,32 +2274,89 @@ li.menu-search-result-term:before {
   }
 }
 
-[normative-optional] {
+[normative-optional],
+[legacy] {
   border-left: 5px solid #ff6600;
   padding: 0.5em;
   display: block;
   background: #ffeedd;
 }
 
-.normative-optional-tag {
+.clause-attributes-tag {
   text-transform: uppercase;
   color: #884400;
 }
 
-.normative-optional-tag a {
+.clause-attributes-tag a {
   color: #884400;
 }
-</style></head><body><div id="menu-toggle">☰</div><div id="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-demo-clause" title="This is an emu-clause"><span class="secnum">1</span> This is an emu-clause</a></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage -1 Draft / March 29, 2021</h1><h1 class="title">Proposal Title Goes Here</h1>
+</style></head><body><div id="menu-toggle">☰</div><div id="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder1" title="Placeholder to ensure correct clause numbering"><span class="secnum">1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder2" title="Placeholder to ensure correct clause numbering"><span class="secnum">2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder3" title="Placeholder to ensure correct clause numbering"><span class="secnum">3</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder4" title="Placeholder to ensure correct clause numbering"><span class="secnum">4</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder5" title="Placeholder to ensure correct clause numbering"><span class="secnum">5</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder6" title="Placeholder to ensure correct clause numbering"><span class="secnum">6</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder7" title="Placeholder to ensure correct clause numbering"><span class="secnum">7</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder8" title="Placeholder to ensure correct clause numbering"><span class="secnum">8</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder9" title="Placeholder to ensure correct clause numbering"><span class="secnum">9</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderA" title="Placeholder to ensure correct clause numbering"><span class="secnum">10</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderB" title="Placeholder to ensure correct clause numbering"><span class="secnum">11</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderC" title="Placeholder to ensure correct clause numbering"><span class="secnum">12</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderD" title="Placeholder to ensure correct clause numbering"><span class="secnum">13</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderE" title="Placeholder to ensure correct clause numbering"><span class="secnum">14</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderF" title="Placeholder to ensure correct clause numbering"><span class="secnum">15</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderG" title="Placeholder to ensure correct clause numbering"><span class="secnum">16</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderH" title="Placeholder to ensure correct clause numbering"><span class="secnum">17</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderI" title="Placeholder to ensure correct clause numbering"><span class="secnum">18</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholderJ" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderK" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.3.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 0 Draft / August 19, 2021</h1><h1 class="title">Get Intrinsic</h1>
 
-<emu-clause id="sec-demo-clause">
-  <h1><span class="secnum">1</span> This is an emu-clause</h1>
-  <p>This is an algorithm:</p>
-  <emu-alg><ol><li>Let <var>proposal</var> be <emu-val>undefined</emu-val>.</li><li>If IsAccepted(<var>proposal</var>),<ol><li>Let <var>stage</var> be <emu-val>0</emu-val>.</li></ol></li><li>Else,<ol><li>Let <var>stage</var> be <emu-val>-1</emu-val>.</li></ol></li><li>Return ?&nbsp;<emu-xref aoid="ToString" id="_ref_0"><a href="https://tc39.es/ecma262/#sec-tostring">ToString</a></emu-xref>(<var>proposal</var>).</li></ol></emu-alg>
+<style>
+#sec-placeholder, [href^="#sec-placeholder"], .placeholder {
+  display: none;
+}
+</style>
+<script>
+  Array.from(document.querySelectorAll('ol.toc li'), function (node) {
+    if (node.querySelector(':scope > [href^="#sec-placeholder')) {
+      node.style.display = 'none';
+    }
+  });
+</script>
+
+<emu-clause class="placeholder" id="sec-placeholder1"><h1><span class="secnum">1</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder2"><h1><span class="secnum">2</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder3"><h1><span class="secnum">3</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder4"><h1><span class="secnum">4</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder5"><h1><span class="secnum">5</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder6"><h1><span class="secnum">6</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder7"><h1><span class="secnum">7</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder8"><h1><span class="secnum">8</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder9"><h1><span class="secnum">9</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderA"><h1><span class="secnum">10</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderB"><h1><span class="secnum">11</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderC"><h1><span class="secnum">12</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderD"><h1><span class="secnum">13</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderE"><h1><span class="secnum">14</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderF"><h1><span class="secnum">15</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderG"><h1><span class="secnum">16</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderH"><h1><span class="secnum">17</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderI"><h1><span class="secnum">18</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+
+<emu-clause id="sec-value-properties-of-the-global-object">
+  <h1><span class="secnum">19</span> Value Properties of the Global Object</h1>
+
+  <emu-clause class="placeholder" id="sec-placeholderJ"><h1><span class="secnum">19.1</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+  <emu-clause class="placeholder" id="sec-placeholderK"><h1><span class="secnum">19.2</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+
+  <emu-clause id="sec-function-properties-of-the-global-object">
+    <h1><span class="secnum">19.3</span> Function Properties of the Global Object</h1>
+
+    <emu-clause id="sec-placeholder"><h1><span class="secnum">19.3.1</span> Placeholder to ensure correct clause numbering</h1></emu-clause>
+
+    <emu-clause id="sec-getintrinsic">
+      <h1><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</h1>
+      <ins class="block">
+      <p>The <code>getIntrinsic</code> function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the <code>getIntrinsic</code> function is called with one argument <var>name</var>, the following steps are taken:</p>
+      <emu-alg><ol><li>If <emu-xref aoid="Type" id="_ref_0"><a href="https://tc39.es/ecma262/#sec-ecmascript-data-types-and-values">Type</a></emu-xref>(<var>name</var>) is not String, throw a <emu-val>TypeError</emu-val> exception.</li><li>If the <emu-xref href="#sec-ecmascript-language-types-string-type"><a href="https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type">string-concatenation</a></emu-xref> of <emu-val>"%"</emu-val>, <var>name</var>, and <emu-val>"%"</emu-val> would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-known Intrinsic Objects</a>, then<ol><li>Return that intrinisc.</li></ol></li><li>Throw a <emu-val>TypeError</emu-val> exception.</li></ol></emu-alg>
+      <emu-note><span class="note">Note</span><div class="note-contents">
+        When the <var>name</var> string succeeds in producing an intrinsic, the <var>name</var> string surrounded by <emu-val>"%"</emu-val> matches the intrinsic notation described in the specification in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-known Intrinsic Objects</a>.
+      </div></emu-note>
+      </ins>
+    </emu-clause>
+
+    <emu-clause id="sec-isfinite-number">
+      <h1><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</h1>
+      <p>The <code>isFinite</code> function is the <dfn>%isFinite%</dfn> intrinsic object. When the <code>isFinite</code> function is called with one argument <var>number</var>, the following steps are taken:</p>
+      <emu-alg><ol><li>Let <var>num</var> be ?&nbsp;<emu-xref aoid="ToNumber" id="_ref_1"><a href="https://tc39.es/ecma262/#sec-tonumber">ToNumber</a></emu-xref>(<var>number</var>).</li><li>If <var>num</var> is <emu-val>NaN</emu-val>, <emu-val>+∞</emu-val><sub>𝔽</sub>, or <emu-val>-∞</emu-val><sub>𝔽</sub>, return <emu-val>false</emu-val>.</li><li>Otherwise, return <emu-val>true</emu-val>.</li></ol></emu-alg>
+    </emu-clause>
+  </emu-clause>
 </emu-clause><emu-annex id="sec-copyright-and-software-license">
       <h1><span class="secnum">A</span> Copyright &amp; Software License</h1>
       
       <h2>Copyright Notice</h2>
-      <p>© 2021 Your Name(s) Here</p>
+      <p>© 2021 Jordan Harband</p>
 
       <h2>Software License</h2>
       <p>All Software contained in this document ("Software") is protected by copyright and is being made available under the "BSD License", included below. This Software may be subject to third party rights (rights from parties other than Ecma International), including patent rights, and no licenses under such third party rights are granted under this license even if the third party concerned is a member of Ecma International. SEE THE ECMA CODE OF CONDUCT IN PATENT MATTERS AVAILABLE AT https://ecma-international.org/memento/codeofconduct.htm FOR INFORMATION REGARDING THE LICENSING OF PATENT CLAIMS THAT ARE REQUIRED TO IMPLEMENT ECMA INTERNATIONAL STANDARDS.</p>
@@ -2233,5 +2371,4 @@ li.menu-search-result-term:before {
 
 <p>THIS SOFTWARE IS PROVIDED BY THE ECMA INTERNATIONAL "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL ECMA INTERNATIONAL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
 
-    </emu-annex>
-</div></body>
+    </emu-annex></div></body>

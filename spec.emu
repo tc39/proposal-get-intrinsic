@@ -4,20 +4,78 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
 <pre class="metadata">
-title: Proposal Title Goes Here
-stage: -1
-contributors: Your Name(s) Here
+title: Get Intrinsic
+stage: 0
+contributors: Jordan Harband
 </pre>
 
-<emu-clause id="sec-demo-clause">
-  <h1>This is an emu-clause</h1>
-  <p>This is an algorithm:</p>
-  <emu-alg>
-    1. Let _proposal_ be *undefined*.
-    1. If IsAccepted(_proposal_),
-      1. Let _stage_ be *0*.
-    1. Else,
-      1. Let _stage_ be *-1*.
-    1. Return ? ToString(_proposal_).
-  </emu-alg>
+<style>
+#sec-placeholder, [href^="#sec-placeholder"], .placeholder {
+  display: none;
+}
+</style>
+<script>
+  Array.from(document.querySelectorAll('ol.toc li'), function (node) {
+    if (node.querySelector(':scope > [href^="#sec-placeholder')) {
+      node.style.display = 'none';
+    }
+  });
+</script>
+
+<emu-clause class="placeholder" id="sec-placeholder1"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder2"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder3"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder4"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder5"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder6"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder7"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder8"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholder9"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderA"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderB"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderC"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderD"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderE"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderF"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderG"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderH"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause class="placeholder" id="sec-placeholderI"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+
+<emu-clause id="sec-value-properties-of-the-global-object">
+  <h1>Value Properties of the Global Object</h1>
+
+  <emu-clause class="placeholder" id="sec-placeholderJ"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+  <emu-clause class="placeholder" id="sec-placeholderK"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+
+  <emu-clause id="sec-function-properties-of-the-global-object">
+    <h1>Function Properties of the Global Object</h1>
+
+    <emu-clause id="sec-placeholder"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+
+    <emu-clause id="sec-getintrinsic">
+      <h1>getIntrinsic ( _name_ )</h1>
+      <ins class="block">
+      <p>The `getIntrinsic` function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the `getIntrinsic` function is called with one argument _name_, the following steps are taken:</p>
+      <emu-alg>
+        1. If Type(_name_) is not String, throw a *TypeError* exception.
+        1. If the string-concatenation of *"%"*, _name_, and *"%"* would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-known Intrinsic Objects</a>, then
+          1. Return that intrinisc.
+        1. Throw a *TypeError* exception.
+      </emu-alg>
+      <emu-note>
+        When the _name_ string succeeds in producing an intrinsic, the _name_ string surrounded by *"%"* matches the intrinsic notation described in the specification in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-known Intrinsic Objects</a>.
+      </emu-note>
+      </ins>
+    </emu-clause>
+
+    <emu-clause id="sec-isfinite-number">
+      <h1>isFinite ( _number_ )</h1>
+      <p>The `isFinite` function is the <dfn>%isFinite%</dfn> intrinsic object. When the `isFinite` function is called with one argument _number_, the following steps are taken:</p>
+      <emu-alg>
+        1. Let _num_ be ? ToNumber(_number_).
+        1. If _num_ is *NaN*, *+&infin;*<sub>𝔽</sub>, or *-&infin;*<sub>𝔽</sub>, return *false*.
+        1. Otherwise, return *true*.
+      </emu-alg>
+    </emu-clause>
+  </emu-clause>
 </emu-clause>
