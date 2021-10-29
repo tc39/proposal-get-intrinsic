@@ -4,7 +4,7 @@ EcmaScript Proposal, specs, and reference implementation to provide a robust way
 
 Spec drafted by [@ljharb](https://github.com/ljharb).
 
-This proposal is currently at stage 0 of the [process](https://tc39.github.io/process-document/).
+This proposal is currently at stage 1 of the [process](https://tc39.github.io/process-document/).
 
 ## "First-run" code
 
@@ -69,7 +69,7 @@ Shims/polyfills that added new methods would of course need to also wrap/replace
 In modern browsers/engines that ship this API, this cost will reduce to nothing, and the eval/CSP clash will go away.
 
 ## Spec
-You can view the spec for the globl `getIntrinsic` solution rendered as [HTML](https://ljharb.github.io/proposal-get-intrinsic/).
+You can view the spec for the globl `getIntrinsic` solution rendered as [HTML](https://tc39.github.io/proposal-get-intrinsic/).
 
 ## Implementations
 None yet - it would be inappropriate to publish a runtime implementation of a language proposal for API prior to stage 3.

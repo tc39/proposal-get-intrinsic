@@ -190,7 +190,7 @@ function relevance(result) {
     relevance += 2048;
   }
 
-  relevance += Math.max(0, 255 - result.entry.key.length);
+  relevance += Math.max(0, 255 - result.key.length);
 
   return relevance;
 }
@@ -220,14 +220,15 @@ Search.prototype.search = function (searchString) {
 
     for (let i = 0; i < this.biblio.entries.length; i++) {
       let entry = this.biblio.entries[i];
-      if (!entry.key) {
+      let key = getKey(entry);
+      if (!key) {
         // biblio entries without a key aren't searchable
         continue;
       }
 
-      let match = fuzzysearch(searchString, entry.key);
+      let match = fuzzysearch(searchString, key);
       if (match) {
-        results.push({ entry, match });
+        results.push({ key, entry, match });
       }
     }
 
@@ -276,6 +277,7 @@ Search.prototype.displayResults = function (results) {
     let html = '<ul>';
 
     results.forEach(result => {
+      let key = result.key;
       let entry = result.entry;
       let id = entry.id;
       let cssClass = '';
@@ -283,19 +285,19 @@ Search.prototype.displayResults = function (results) {
 
       if (entry.type === 'clause') {
         let number = entry.number ? entry.number + ' ' : '';
-        text = number + entry.key;
+        text = number + key;
         cssClass = 'clause';
         id = entry.id;
       } else if (entry.type === 'production') {
-        text = entry.key;
+        text = key;
         cssClass = 'prod';
         id = entry.id;
       } else if (entry.type === 'op') {
-        text = entry.key;
+        text = key;
         cssClass = 'op';
         id = entry.id || entry.refId;
       } else if (entry.type === 'term') {
-        text = entry.key;
+        text = key;
         cssClass = 'term';
         id = entry.id || entry.refId;
       }
@@ -314,6 +316,31 @@ Search.prototype.displayResults = function (results) {
     this.$searchResults.classList.add('no-results');
   }
 };
+
+function getKey(item) {
+  if (item.key) {
+    return item.key;
+  }
+  switch (item.type) {
+    case 'clause':
+      return item.title || item.titleHTML;
+    case 'production':
+      return item.name;
+    case 'op':
+      return item.aoid;
+    case 'term':
+      return item.term;
+    case 'table':
+    case 'figure':
+    case 'example':
+    case 'note':
+      return item.caption;
+    case 'step':
+      return item.id;
+    default:
+      throw new Error("Can't get key for " + item.type);
+  }
+}
 
 function Menu() {
   this.$toggle = document.getElementById('menu-toggle');
@@ -1025,6 +1052,8 @@ function makeLinkToId(id) {
   return (targetSec === 'index' ? './' : targetSec + '.html') + hash;
 }
 
+let stylesheetWorkaroundForCanCallUserCodeAnnotation;
+
 function doShortcut(e) {
   if (!(e.target instanceof HTMLElement)) {
     return;
@@ -1034,7 +1063,10 @@ function doShortcut(e) {
   if (name === 'textarea' || name === 'input' || name === 'select' || target.isContentEditable) {
     return;
   }
-  if (e.key === 'm' && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && usesMultipage) {
+  if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+    return;
+  }
+  if (e.key === 'm' && usesMultipage) {
     let pathParts = location.pathname.split('/');
     let hash = location.hash;
     if (pathParts[pathParts.length - 2] === 'multipage') {
@@ -1050,6 +1082,13 @@ function doShortcut(e) {
       location = pathParts.slice(0, -2).join('/') + '/' + hash;
     } else {
       location = 'multipage/' + hash;
+    }
+  } else if (e.key === 'u') {
+    if (stylesheetWorkaroundForCanCallUserCodeAnnotation.innerText === '') {
+      stylesheetWorkaroundForCanCallUserCodeAnnotation.textContent =
+        'a.e-user-code::before { display: block !important; }';
+    } else {
+      stylesheetWorkaroundForCanCallUserCodeAnnotation.textContent = '';
     }
   }
 }
@@ -1078,6 +1117,8 @@ document.addEventListener('keypress', doShortcut);
 document.addEventListener('DOMContentLoaded', () => {
   Toolbox.init();
   referencePane.init();
+  stylesheetWorkaroundForCanCallUserCodeAnnotation = document.createElement('style');
+  document.head.appendChild(stylesheetWorkaroundForCanCallUserCodeAnnotation);
 });
 
 'use strict';
@@ -1112,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let sdoMap = JSON.parse(`{}`);
-let biblio = JSON.parse(`{"refsByClause":{"sec-getintrinsic":["_ref_0"],"sec-isfinite-number":["_ref_1"]},"entries":[{"type":"clause","id":"sec-placeholder1","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"1","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder2","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"2","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder3","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"3","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder4","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"4","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder5","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"5","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder6","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"6","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder7","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"7","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder8","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"8","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder9","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"9","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderA","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"10","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderB","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"11","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderC","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"12","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderD","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"13","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderE","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"14","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderF","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"15","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderG","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"16","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderH","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"17","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderI","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"18","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderJ","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.1","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholderK","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.2","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"clause","id":"sec-placeholder","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.3.1","referencingIds":[],"key":"Placeholder to ensure correct clause numbering"},{"type":"term","term":"%getIntrinsic%","refId":"sec-getintrinsic","referencingIds":[],"key":"%getIntrinsic%"},{"type":"clause","id":"sec-getintrinsic","aoid":null,"titleHTML":"getIntrinsic ( <var>name</var> )","number":"19.3.2","referencingIds":[],"key":"getIntrinsic ( name )"},{"type":"term","term":"%isFinite%","refId":"sec-isfinite-number","referencingIds":[],"key":"%isFinite%"},{"type":"clause","id":"sec-isfinite-number","aoid":null,"titleHTML":"isFinite ( <var>number</var> )","number":"19.3.3","referencingIds":[],"key":"isFinite ( number )"},{"type":"clause","id":"sec-function-properties-of-the-global-object","aoid":null,"titleHTML":"Function Properties of the Global Object","number":"19.3","referencingIds":[],"key":"Function Properties of the Global Object"},{"type":"clause","id":"sec-value-properties-of-the-global-object","aoid":null,"titleHTML":"Value Properties of the Global Object","number":"19","referencingIds":[],"key":"Value Properties of the Global Object"},{"type":"clause","id":"sec-copyright-and-software-license","aoid":null,"titleHTML":"Copyright &amp; Software License","number":"A","referencingIds":[],"key":"Copyright & Software License"}]}`);
+let biblio = JSON.parse(`{"refsByClause":{"sec-getintrinsic":["_ref_0"],"sec-isfinite-number":["_ref_1"]},"entries":[{"type":"clause","id":"sec-placeholder1","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"1","referencingIds":[]},{"type":"clause","id":"sec-placeholder2","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"2","referencingIds":[]},{"type":"clause","id":"sec-placeholder3","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"3","referencingIds":[]},{"type":"clause","id":"sec-placeholder4","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"4","referencingIds":[]},{"type":"clause","id":"sec-placeholder5","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"5","referencingIds":[]},{"type":"clause","id":"sec-placeholder6","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"6","referencingIds":[]},{"type":"clause","id":"sec-placeholder7","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"7","referencingIds":[]},{"type":"clause","id":"sec-placeholder8","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"8","referencingIds":[]},{"type":"clause","id":"sec-placeholder9","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"9","referencingIds":[]},{"type":"clause","id":"sec-placeholderA","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"10","referencingIds":[]},{"type":"clause","id":"sec-placeholderB","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"11","referencingIds":[]},{"type":"clause","id":"sec-placeholderC","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"12","referencingIds":[]},{"type":"clause","id":"sec-placeholderD","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"13","referencingIds":[]},{"type":"clause","id":"sec-placeholderE","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"14","referencingIds":[]},{"type":"clause","id":"sec-placeholderF","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"15","referencingIds":[]},{"type":"clause","id":"sec-placeholderG","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"16","referencingIds":[]},{"type":"clause","id":"sec-placeholderH","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"17","referencingIds":[]},{"type":"clause","id":"sec-placeholderI","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"18","referencingIds":[]},{"type":"clause","id":"sec-placeholderJ","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.1","referencingIds":[]},{"type":"clause","id":"sec-placeholderK","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.2","referencingIds":[]},{"type":"clause","id":"sec-placeholder","aoid":null,"titleHTML":"Placeholder to ensure correct clause numbering","number":"19.3.1","referencingIds":[]},{"type":"term","term":"%getIntrinsic%","refId":"sec-getintrinsic","referencingIds":[]},{"type":"clause","id":"sec-getintrinsic","aoid":null,"title":"getIntrinsic ( name )","titleHTML":"getIntrinsic ( <var>name</var> )","number":"19.3.2","referencingIds":[]},{"type":"term","term":"%isFinite%","refId":"sec-isfinite-number","referencingIds":[]},{"type":"clause","id":"sec-isfinite-number","aoid":null,"title":"isFinite ( number )","titleHTML":"isFinite ( <var>number</var> )","number":"19.3.3","referencingIds":[]},{"type":"clause","id":"sec-function-properties-of-the-global-object","aoid":null,"titleHTML":"Function Properties of the Global Object","number":"19.3","referencingIds":[]},{"type":"clause","id":"sec-value-properties-of-the-global-object","aoid":null,"titleHTML":"Value Properties of the Global Object","number":"19","referencingIds":[]},{"type":"clause","id":"sec-copyright-and-software-license","aoid":null,"title":"Copyright & Software License","titleHTML":"Copyright &amp; Software License","number":"A","referencingIds":[]}]}`);
 ;let usesMultipage = false</script><style>body {
   display: flex;
   font-size: 18px;
@@ -1148,6 +1189,22 @@ a:visited {
 a:hover {
   text-decoration: underline;
   color: #239dee;
+}
+
+a.e-user-code {
+  position: relative;
+}
+
+a.e-user-code::before {
+  display: none;
+  color: brown;
+  position: absolute;
+  bottom: -0.9em;
+  left: 0;
+  content: 'UC';
+  font-style: italic;
+  font-weight: bold;
+  font-size: small;
 }
 
 code {
@@ -2290,7 +2347,10 @@ li.menu-search-result-term:before {
 .clause-attributes-tag a {
   color: #884400;
 }
-</style></head><body><div id="menu-toggle">☰</div><div id="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder1" title="Placeholder to ensure correct clause numbering"><span class="secnum">1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder2" title="Placeholder to ensure correct clause numbering"><span class="secnum">2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder3" title="Placeholder to ensure correct clause numbering"><span class="secnum">3</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder4" title="Placeholder to ensure correct clause numbering"><span class="secnum">4</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder5" title="Placeholder to ensure correct clause numbering"><span class="secnum">5</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder6" title="Placeholder to ensure correct clause numbering"><span class="secnum">6</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder7" title="Placeholder to ensure correct clause numbering"><span class="secnum">7</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder8" title="Placeholder to ensure correct clause numbering"><span class="secnum">8</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder9" title="Placeholder to ensure correct clause numbering"><span class="secnum">9</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderA" title="Placeholder to ensure correct clause numbering"><span class="secnum">10</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderB" title="Placeholder to ensure correct clause numbering"><span class="secnum">11</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderC" title="Placeholder to ensure correct clause numbering"><span class="secnum">12</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderD" title="Placeholder to ensure correct clause numbering"><span class="secnum">13</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderE" title="Placeholder to ensure correct clause numbering"><span class="secnum">14</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderF" title="Placeholder to ensure correct clause numbering"><span class="secnum">15</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderG" title="Placeholder to ensure correct clause numbering"><span class="secnum">16</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderH" title="Placeholder to ensure correct clause numbering"><span class="secnum">17</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderI" title="Placeholder to ensure correct clause numbering"><span class="secnum">18</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholderJ" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderK" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.3.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 0 Draft / August 19, 2021</h1><h1 class="title">Get Intrinsic</h1>
+</style></head><body><div id="menu-toggle"><svg xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; stroke:currentColor" viewBox="0 0 120 120">
+      <title>Menu</title>
+      <path stroke-width="10" stroke-linecap="round" d="M30,60 h60  M30,30 m0,5 h60  M30,90 m0,-5 h60"></path>
+    </svg></div><div id="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder1" title="Placeholder to ensure correct clause numbering"><span class="secnum">1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder2" title="Placeholder to ensure correct clause numbering"><span class="secnum">2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder3" title="Placeholder to ensure correct clause numbering"><span class="secnum">3</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder4" title="Placeholder to ensure correct clause numbering"><span class="secnum">4</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder5" title="Placeholder to ensure correct clause numbering"><span class="secnum">5</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder6" title="Placeholder to ensure correct clause numbering"><span class="secnum">6</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder7" title="Placeholder to ensure correct clause numbering"><span class="secnum">7</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder8" title="Placeholder to ensure correct clause numbering"><span class="secnum">8</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder9" title="Placeholder to ensure correct clause numbering"><span class="secnum">9</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderA" title="Placeholder to ensure correct clause numbering"><span class="secnum">10</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderB" title="Placeholder to ensure correct clause numbering"><span class="secnum">11</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderC" title="Placeholder to ensure correct clause numbering"><span class="secnum">12</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderD" title="Placeholder to ensure correct clause numbering"><span class="secnum">13</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderE" title="Placeholder to ensure correct clause numbering"><span class="secnum">14</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderF" title="Placeholder to ensure correct clause numbering"><span class="secnum">15</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderG" title="Placeholder to ensure correct clause numbering"><span class="secnum">16</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderH" title="Placeholder to ensure correct clause numbering"><span class="secnum">17</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderI" title="Placeholder to ensure correct clause numbering"><span class="secnum">18</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholderJ" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderK" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.3.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 1 Draft / October 29, 2021</h1><h1 class="title">Get Intrinsic</h1>
 
 <style>
 #sec-placeholder, [href^="#sec-placeholder"], .placeholder {
@@ -2371,4 +2431,5 @@ li.menu-search-result-term:before {
 
 <p>THIS SOFTWARE IS PROVIDED BY THE ECMA INTERNATIONAL "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL ECMA INTERNATIONAL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
 
-    </emu-annex></div></body>
+    </emu-annex>
+</div></body>
