@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npm run build-loose -- --watch",
     "build": "npm run build-loose -- --strict",
-    "build-loose": "ecmarkup --verbose spec.emu index.html"
+    "build-loose": "ecmarkup --verbose --load-biblio=@tc39/ecma262-biblio spec.emu index.html"
   },
   "homepage": "https://github.com/tc39/proposal-get-intrinsic#readme",
   "repository": {
@@ -14,6 +14,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "ecmarkup": "^9.4.1"
+    "@tc39/ecma262-biblio": "^1.0.2269",
+    "ecmarkup": "^10.0.2"
   }
 }
