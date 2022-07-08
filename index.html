@@ -214,7 +214,7 @@ Search.prototype.search = function (searchString) {
   if (/^[\d.]*$/.test(searchString)) {
     results = this.biblio.clauses
       .filter(clause => clause.number.substring(0, searchString.length) === searchString)
-      .map(clause => ({ entry: clause }));
+      .map(clause => ({ key: getKey(clause), entry: clause }));
   } else {
     results = [];
 
@@ -754,6 +754,7 @@ let referencePane = {
 
     let $spacer = document.createElement('div');
     $spacer.setAttribute('id', 'references-pane-spacer');
+    $spacer.classList.add('menu-spacer');
 
     this.$pane = document.createElement('div');
     this.$pane.setAttribute('id', 'references-pane');
@@ -902,6 +903,7 @@ let Toolbox = {
       e.preventDefault();
       e.stopPropagation();
       menu.togglePinEntry(this.entry.id);
+      this.$pinLink.textContent = menu._pinnedIds[this.entry.id] ? 'Unpin' : 'Pin';
     });
 
     this.$refsLink = document.createElement('a');
@@ -922,6 +924,7 @@ let Toolbox = {
     sdoBox.deactivate();
     this.active = true;
     this.entry = entry;
+    this.$pinLink.textContent = menu._pinnedIds[entry.id] ? 'Unpin' : 'Pin';
     this.$outer.classList.add('active');
     this.top = el.offsetTop - this.$outer.offsetHeight;
     this.left = el.offsetLeft - 10;
@@ -1115,6 +1118,114 @@ document.addEventListener('keypress', doShortcut);
 document.addEventListener('DOMContentLoaded', () => {
   Toolbox.init();
   referencePane.init();
+});
+
+// preserve state during navigation
+
+function getTocPath(li) {
+  let path = [];
+  let pointer = li;
+  while (true) {
+    let parent = pointer.parentElement;
+    if (parent == null) {
+      return null;
+    }
+    let index = [].indexOf.call(parent.children, pointer);
+    if (index == -1) {
+      return null;
+    }
+    path.unshift(index);
+    pointer = parent.parentElement;
+    if (pointer == null) {
+      return null;
+    }
+    if (pointer.id === 'menu-toc') {
+      break;
+    }
+    if (pointer.tagName !== 'LI') {
+      return null;
+    }
+  }
+  return path;
+}
+
+function activateTocPath(path) {
+  try {
+    let pointer = document.getElementById('menu-toc');
+    for (let index of path) {
+      pointer = pointer.querySelector('ol').children[index];
+    }
+    pointer.classList.add('active');
+  } catch (e) {
+    // pass
+  }
+}
+
+function getActiveTocPaths() {
+  return [...menu.$menu.querySelectorAll('.active')].map(getTocPath).filter(p => p != null);
+}
+
+function loadStateFromSessionStorage() {
+  if (!window.sessionStorage || typeof menu === 'undefined' || window.navigating) {
+    return;
+  }
+  if (sessionStorage.referencePaneState != null) {
+    let state = JSON.parse(sessionStorage.referencePaneState);
+    if (state != null) {
+      if (state.type === 'ref') {
+        let entry = menu.search.biblio.byId[state.id];
+        if (entry != null) {
+          referencePane.showReferencesFor(entry);
+        }
+      } else if (state.type === 'sdo') {
+        let sdos = sdoMap[state.id];
+        if (sdos != null) {
+          referencePane.$headerText.innerHTML = state.html;
+          referencePane.showSDOsBody(sdos, state.id);
+        }
+      }
+      delete sessionStorage.referencePaneState;
+    }
+  }
+
+  if (sessionStorage.activeTocPaths != null) {
+    document
+      .getElementById('menu-toc')
+      .querySelectorAll('.active')
+      .forEach(e => {
+        e.classList.remove('active');
+      });
+    let active = JSON.parse(sessionStorage.activeTocPaths);
+    active.forEach(activateTocPath);
+    delete sessionStorage.activeTocPaths;
+  }
+
+  if (sessionStorage.searchValue != null) {
+    let value = JSON.parse(sessionStorage.searchValue);
+    menu.search.$searchBox.value = value;
+    menu.search.search(value);
+    delete sessionStorage.searchValue;
+  }
+
+  if (sessionStorage.tocScroll != null) {
+    let tocScroll = JSON.parse(sessionStorage.tocScroll);
+    menu.$toc.scrollTop = tocScroll;
+    delete sessionStorage.tocScroll;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadStateFromSessionStorage);
+
+window.addEventListener('pageshow', loadStateFromSessionStorage);
+
+window.addEventListener('beforeunload', () => {
+  if (!window.sessionStorage || typeof menu === 'undefined') {
+    return;
+  }
+  sessionStorage.referencePaneState = JSON.stringify(referencePane.state || null);
+  sessionStorage.activeTocPaths = JSON.stringify(getActiveTocPaths());
+  sessionStorage.searchValue = JSON.stringify(menu.search.$searchBox.value);
+  sessionStorage.tocScroll = JSON.stringify(menu.$toc.scrollTop);
 });
 
 'use strict';
@@ -1900,7 +2011,7 @@ tr.del > td {
   z-index: 2;
 }
 
-#menu-spacer {
+.menu-spacer {
   flex-basis: 33%;
   max-width: 500px;
   flex-grow: 0;
@@ -2315,11 +2426,6 @@ li.menu-search-result-term:before {
   overflow-y: auto;
 }
 
-#references-pane-spacer {
-  flex-basis: 33%;
-  max-width: 500px;
-}
-
 #references-pane {
   flex-grow: 1;
   overflow: hidden;
@@ -2335,6 +2441,10 @@ li.menu-search-result-term:before {
   content: '✖';
   float: right;
   cursor: pointer;
+}
+
+#references-pane table tbody {
+  vertical-align: baseline;
 }
 
 #references-pane table tr td:first-child {
@@ -2414,7 +2524,7 @@ li.menu-search-result-term:before {
 </ul></div><div id="menu-toggle"><svg xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; stroke:currentColor" viewBox="0 0 120 120">
       <title>Menu</title>
       <path stroke-width="10" stroke-linecap="round" d="M30,60 h60  M30,30 m0,5 h60  M30,90 m0,-5 h60"></path>
-    </svg></div><div id="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder1" title="Placeholder to ensure correct clause numbering"><span class="secnum">1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder2" title="Placeholder to ensure correct clause numbering"><span class="secnum">2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder3" title="Placeholder to ensure correct clause numbering"><span class="secnum">3</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder4" title="Placeholder to ensure correct clause numbering"><span class="secnum">4</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder5" title="Placeholder to ensure correct clause numbering"><span class="secnum">5</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder6" title="Placeholder to ensure correct clause numbering"><span class="secnum">6</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder7" title="Placeholder to ensure correct clause numbering"><span class="secnum">7</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder8" title="Placeholder to ensure correct clause numbering"><span class="secnum">8</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder9" title="Placeholder to ensure correct clause numbering"><span class="secnum">9</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderA" title="Placeholder to ensure correct clause numbering"><span class="secnum">10</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderB" title="Placeholder to ensure correct clause numbering"><span class="secnum">11</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderC" title="Placeholder to ensure correct clause numbering"><span class="secnum">12</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderD" title="Placeholder to ensure correct clause numbering"><span class="secnum">13</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderE" title="Placeholder to ensure correct clause numbering"><span class="secnum">14</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderF" title="Placeholder to ensure correct clause numbering"><span class="secnum">15</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderG" title="Placeholder to ensure correct clause numbering"><span class="secnum">16</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderH" title="Placeholder to ensure correct clause numbering"><span class="secnum">17</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderI" title="Placeholder to ensure correct clause numbering"><span class="secnum">18</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholderJ" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderK" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.3.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 1 Draft / March 18, 2022</h1><h1 class="title">Get Intrinsic</h1>
+    </svg></div><div id="menu-spacer" class="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder1" title="Placeholder to ensure correct clause numbering"><span class="secnum">1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder2" title="Placeholder to ensure correct clause numbering"><span class="secnum">2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder3" title="Placeholder to ensure correct clause numbering"><span class="secnum">3</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder4" title="Placeholder to ensure correct clause numbering"><span class="secnum">4</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder5" title="Placeholder to ensure correct clause numbering"><span class="secnum">5</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder6" title="Placeholder to ensure correct clause numbering"><span class="secnum">6</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder7" title="Placeholder to ensure correct clause numbering"><span class="secnum">7</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder8" title="Placeholder to ensure correct clause numbering"><span class="secnum">8</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholder9" title="Placeholder to ensure correct clause numbering"><span class="secnum">9</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderA" title="Placeholder to ensure correct clause numbering"><span class="secnum">10</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderB" title="Placeholder to ensure correct clause numbering"><span class="secnum">11</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderC" title="Placeholder to ensure correct clause numbering"><span class="secnum">12</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderD" title="Placeholder to ensure correct clause numbering"><span class="secnum">13</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderE" title="Placeholder to ensure correct clause numbering"><span class="secnum">14</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderF" title="Placeholder to ensure correct clause numbering"><span class="secnum">15</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderG" title="Placeholder to ensure correct clause numbering"><span class="secnum">16</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderH" title="Placeholder to ensure correct clause numbering"><span class="secnum">17</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderI" title="Placeholder to ensure correct clause numbering"><span class="secnum">18</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholderJ" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-placeholderK" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.2</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-placeholder" title="Placeholder to ensure correct clause numbering"><span class="secnum">19.3.1</span> Placeholder to ensure correct clause numbering</a></li><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 1 Draft / July 8, 2022</h1><h1 class="title">Get Intrinsic</h1>
 
 <style>
 #sec-placeholder, [href^="#sec-placeholder"], .placeholder {
