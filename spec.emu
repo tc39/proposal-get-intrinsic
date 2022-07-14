@@ -10,7 +10,7 @@ contributors: Jordan Harband
 </pre>
 
 <style>
-#sec-placeholder, [href^="#sec-placeholder"], .placeholder {
+[id^="#sec-placeholder"], [href^="#sec-placeholder"] {
   display: none;
 }
 </style>
@@ -22,35 +22,35 @@ contributors: Jordan Harband
   });
 </script>
 
-<emu-clause class="placeholder" id="sec-placeholder1"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholder2"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholder3"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholder4"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholder5"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholder6"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholder7"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholder8"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholder9"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderA"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderB"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderC"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderD"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderE"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderF"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderG"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderH"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause class="placeholder" id="sec-placeholderI"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-1"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-2"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-3"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-4"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-5"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-6"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-7"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-8"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-9"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-10"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-11"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-12"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-13"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-14"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-15"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-16"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-17"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+<emu-clause id="sec-placeholder-18"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
 
 <emu-clause id="sec-value-properties-of-the-global-object">
   <h1>Value Properties of the Global Object</h1>
 
-  <emu-clause class="placeholder" id="sec-placeholderJ"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-  <emu-clause class="placeholder" id="sec-placeholderK"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+  <emu-clause id="sec-placeholder-19-1"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+  <emu-clause id="sec-placeholder-19-2"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
 
   <emu-clause id="sec-function-properties-of-the-global-object">
     <h1>Function Properties of the Global Object</h1>
 
-    <emu-clause id="sec-placeholder"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
+    <emu-clause id="sec-placeholder-19-3-1"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
 
     <emu-clause id="sec-getintrinsic">
       <h1>getIntrinsic ( _name_ )</h1>
