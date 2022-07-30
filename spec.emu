@@ -9,50 +9,13 @@ stage: 1
 contributors: Jordan Harband
 </pre>
 
-<style>
-[id^="#sec-placeholder"], [href^="#sec-placeholder"] {
-  display: none;
-}
-</style>
-<script>
-  Array.from(document.querySelectorAll('ol.toc li'), function (node) {
-    if (node.querySelector(':scope > [href^="#sec-placeholder')) {
-      node.style.display = 'none';
-    }
-  });
-</script>
-
-<emu-clause id="sec-placeholder-1"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-2"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-3"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-4"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-5"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-6"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-7"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-8"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-9"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-10"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-11"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-12"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-13"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-14"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-15"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-16"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-17"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-<emu-clause id="sec-placeholder-18"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-
-<emu-clause id="sec-value-properties-of-the-global-object">
+<emu-clause id="sec-value-properties-of-the-global-object" number="19">
   <h1>Value Properties of the Global Object</h1>
 
-  <emu-clause id="sec-placeholder-19-1"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-  <emu-clause id="sec-placeholder-19-2"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-
-  <emu-clause id="sec-function-properties-of-the-global-object">
+  <emu-clause id="sec-function-properties-of-the-global-object" number="3">
     <h1>Function Properties of the Global Object</h1>
 
-    <emu-clause id="sec-placeholder-19-3-1"><h1>Placeholder to ensure correct clause numbering</h1></emu-clause>
-
-    <emu-clause id="sec-getintrinsic">
+    <emu-clause id="sec-getintrinsic" number="2">
       <h1>getIntrinsic ( _name_ )</h1>
       <ins class="block">
       <p>The `getIntrinsic` function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the `getIntrinsic` function is called with one argument _name_, the following steps are taken:</p>
