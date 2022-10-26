@@ -21,12 +21,12 @@ contributors: Jordan Harband
       <p>The `getIntrinsic` function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the `getIntrinsic` function is called with one argument _name_, the following steps are taken:</p>
       <emu-alg>
         1. If Type(_name_) is not String, throw a *TypeError* exception.
-        1. If the string-concatenation of *"%"*, _name_, and *"%"* would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-known Intrinsic Objects</a>, then
-          1. Return that intrinisc.
+        1. If the string-concatenation of *"%"*, _name_, and *"%"* would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>, then
+          1. Return that intrinsic.
         1. Throw a *TypeError* exception.
       </emu-alg>
       <emu-note>
-        When the _name_ string succeeds in producing an intrinsic, the _name_ string surrounded by *"%"* matches the intrinsic notation described in the specification in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-known Intrinsic Objects</a>.
+        When the _name_ string succeeds in producing an intrinsic, the _name_ string surrounded by *"%"* matches the intrinsic notation described in the specification in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>.
       </emu-note>
       </ins>
     </emu-clause>
