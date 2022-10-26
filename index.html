@@ -1,8 +1,6 @@
 <!doctype html>
 <head><meta charset="utf-8">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/styles/base16/solarized-light.min.css"><link rel="stylesheet" href="./spec.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
-<script src="./spec.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/styles/base16/solarized-light.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <title>Get Intrinsic</title><script>'use strict';
 let sdoBox = {
   init() {
@@ -1260,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let sdoMap = JSON.parse(`{}`);
-let biblio = JSON.parse(`{"refsByClause":{},"entries":[{"type":"term","term":"%getIntrinsic%","refId":"sec-getintrinsic"},{"type":"clause","id":"sec-getintrinsic","title":"getIntrinsic ( name )","titleHTML":"getIntrinsic ( <var>name</var> )","number":"19.3.2"},{"type":"term","term":"%isFinite%","refId":"sec-isfinite-number"},{"type":"clause","id":"sec-isfinite-number","title":"isFinite ( number )","titleHTML":"isFinite ( <var>number</var> )","number":"19.3.3"},{"type":"clause","id":"sec-function-properties-of-the-global-object","titleHTML":"Function Properties of the Global Object","number":"19.3"},{"type":"clause","id":"sec-value-properties-of-the-global-object","titleHTML":"Value Properties of the Global Object","number":"19"},{"type":"clause","id":"sec-copyright-and-software-license","title":"Copyright & Software License","titleHTML":"Copyright &amp; Software License","number":"A"}]}`);
+let biblio = JSON.parse(`{"refsByClause":{"sec-well-known-intrinsic-objects":["_ref_0"],"sec-getintrinsic":["_ref_1"]},"entries":[{"type":"term","term":"Object Type","refId":"sec-object-type"},{"type":"table","id":"table-well-known-intrinsic-objects","number":1,"caption":"Table 1: Well-Known Intrinsic Objects","referencingIds":["_ref_0"]},{"type":"clause","id":"sec-well-known-intrinsic-objects","titleHTML":"Well-Known Intrinsic Objects","number":"6.1.7.4"},{"type":"clause","id":"sec-object-type","title":"The Object Type","titleHTML":"The <dfn variants=\\"is an Object,is not an Object\\">Object Type</dfn>","number":"6.1.7"},{"type":"clause","id":"sec-ecmascript-language-types","titleHTML":"ECMAScript Language Types","number":"6.1"},{"type":"op","aoid":"Type","refId":"sec-ecmascript-data-types-and-values"},{"type":"clause","id":"sec-ecmascript-data-types-and-values","titleHTML":"ECMAScript Data Types and Values","number":"6","referencingIds":["_ref_1"]},{"type":"term","term":"%getIntrinsic%","refId":"sec-getintrinsic"},{"type":"clause","id":"sec-getintrinsic","title":"getIntrinsic ( name )","titleHTML":"getIntrinsic ( <var>name</var> )","number":"19.3.2"},{"type":"term","term":"%isFinite%","refId":"sec-isfinite-number"},{"type":"clause","id":"sec-isfinite-number","title":"isFinite ( number )","titleHTML":"isFinite ( <var>number</var> )","number":"19.3.3"},{"type":"clause","id":"sec-function-properties-of-the-global-object","titleHTML":"Function Properties of the Global Object","number":"19.3"},{"type":"clause","id":"sec-value-properties-of-the-global-object","titleHTML":"Value Properties of the Global Object","number":"19"},{"type":"clause","id":"sec-copyright-and-software-license","title":"Copyright & Software License","titleHTML":"Copyright &amp; Software License","number":"A"}]}`);
 ;let usesMultipage = false</script><style>body {
   display: flex;
   word-wrap: break-word;
@@ -2525,7 +2523,68 @@ li.menu-search-result-term:before {
 </ul></div><div id="menu-toggle"><svg xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; stroke:currentColor" viewBox="0 0 120 120">
       <title>Menu</title>
       <path stroke-width="10" stroke-linecap="round" d="M30,60 h60  M30,30 m0,5 h60  M30,90 m0,-5 h60"></path>
-    </svg></div><div id="menu-spacer" class="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 1 Draft / January 16, 2023</h1><h1 class="title">Get Intrinsic</h1>
+    </svg></div><div id="menu-spacer" class="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-ecmascript-data-types-and-values" title="ECMAScript Data Types and Values"><span class="secnum">6</span> ECMAScript Data Types and Values</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-ecmascript-language-types" title="ECMAScript Language Types"><span class="secnum">6.1</span> ECMAScript Language Types</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-object-type" title="The Object Type"><span class="secnum">6.1.7</span> The <dfn variants="is an Object,is not an Object">Object Type</dfn></a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-well-known-intrinsic-objects" title="Well-Known Intrinsic Objects"><span class="secnum">6.1.7.4</span> Well-Known Intrinsic Objects</a></li></ol></li></ol></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 1 Draft / January 16, 2023</h1><h1 class="title">Get Intrinsic</h1>
+
+<emu-clause number="6" id="sec-ecmascript-data-types-and-values" aoid="Type">
+  <h1><span class="secnum">6</span> ECMAScript Data Types and Values</h1>
+
+  <emu-clause id="sec-ecmascript-language-types" number="1">
+    <h1><span class="secnum">6.1</span> ECMAScript Language Types</h1>
+
+    <emu-clause id="sec-object-type" number="7">
+      <h1><span class="secnum">6.1.7</span> The <dfn variants="is an Object,is not an Object">Object Type</dfn></h1>
+
+      <emu-clause id="sec-well-known-intrinsic-objects" number="4">
+        <h1><span class="secnum">6.1.7.4</span> Well-Known Intrinsic Objects</h1>
+        <p>Well-known intrinsics are built-in objects that are explicitly referenced by the algorithms of this specification and which usually have <emu-xref href="#realm"><a href="https://tc39.es/ecma262/#realm">realm</a></emu-xref>-specific identities. Unless otherwise specified each intrinsic object actually corresponds to a set of similar objects, one per <emu-xref href="#realm"><a href="https://tc39.es/ecma262/#realm">realm</a></emu-xref>.</p>
+        <p>Within this specification a reference such as %name% means the intrinsic object, associated with the current <emu-xref href="#realm"><a href="https://tc39.es/ecma262/#realm">realm</a></emu-xref>, corresponding to the name. A reference such as %name.a.b% means, as if the <emu-val>"b"</emu-val> property of the value of the <emu-val>"a"</emu-val> property of the intrinsic object %name% was accessed prior to any ECMAScript code being evaluated. Determination of the current <emu-xref href="#realm"><a href="https://tc39.es/ecma262/#realm">realm</a></emu-xref> and its intrinsics is described in <emu-xref href="#sec-execution-contexts"><a href="https://tc39.es/ecma262/#sec-execution-contexts">9.4</a></emu-xref>. The well-known intrinsics are listed in <emu-xref href="#table-well-known-intrinsic-objects" id="_ref_0"><a href="#table-well-known-intrinsic-objects">Table 1</a></emu-xref>.</p>
+        <emu-table id="table-well-known-intrinsic-objects" caption="Well-Known Intrinsic Objects" oldids="table-7"><figure><figcaption>Table 1: Well-Known Intrinsic Objects</figcaption><span id="table-7"></span>
+          <table>
+            <tbody><tr>
+              <th>
+                Intrinsic Name
+              </th>
+              <th>
+                Global Name
+              </th>
+              <th>
+                ECMAScript Language Association
+              </th>
+              <th>
+                <ins>Directly Accessible to ECMAScript code</ins>
+              </th>
+            </tr>
+            <tr>
+              <td>
+                <emu-xref href="#sec-aggregate-error-constructor"><a href="https://tc39.es/ecma262/#sec-aggregate-error-constructor">%AggregateError%</a></emu-xref>
+              </td>
+              <td>
+                <code>AggregateError</code>
+              </td>
+              <td>
+                The <code>AggregateError</code> <emu-xref href="#constructor"><a href="https://tc39.es/ecma262/#constructor">constructor</a></emu-xref> (<emu-xref href="#sec-aggregate-error-constructor"><a href="https://tc39.es/ecma262/#sec-aggregate-error-constructor">20.5.7.1</a></emu-xref>)
+              </td>
+              <td>
+            </td></tr>
+            <tr>
+              <td>
+                <emu-xref href="#sec-%foriniteratorprototype%-object"><a href="https://tc39.es/ecma262/#sec-%foriniteratorprototype%-object">%ForInIteratorPrototype%</a></emu-xref>
+              </td>
+              <td>
+              </td>
+              <td>
+                The prototype of For-In iterator objects (<emu-xref href="#sec-for-in-iterator-objects"><a href="https://tc39.es/ecma262/#sec-for-in-iterator-objects">14.7.5.10</a></emu-xref>)
+              </td>
+              <td align="center">
+                <ins>No</ins>
+              </td>
+            </tr>
+          </tbody></table>
+        </figure></emu-table>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
 
 <emu-clause id="sec-value-properties-of-the-global-object" number="19">
   <h1><span class="secnum">19</span> Value Properties of the Global Object</h1>
@@ -2537,7 +2596,7 @@ li.menu-search-result-term:before {
       <h1><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</h1>
       <ins class="block">
       <p>The <code>getIntrinsic</code> function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the <code>getIntrinsic</code> function is called with one argument <var>name</var>, the following steps are taken:</p>
-      <emu-alg><ol><li>If <emu-xref aoid="Type"><a href="https://tc39.es/ecma262/#sec-ecmascript-data-types-and-values">Type</a></emu-xref>(<var>name</var>) is not String, throw a <emu-val>TypeError</emu-val> exception.</li><li>If the <emu-xref href="#string-concatenation"><a href="https://tc39.es/ecma262/#string-concatenation">string-concatenation</a></emu-xref> of <emu-val>"%"</emu-val>, <var>name</var>, and <emu-val>"%"</emu-val> would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>, then<ol><li>Return that intrinsic.</li></ol></li><li>Throw a <emu-val>TypeError</emu-val> exception.</li></ol></emu-alg>
+      <emu-alg><ol><li>If <emu-xref aoid="Type" id="_ref_1"><a href="#sec-ecmascript-data-types-and-values">Type</a></emu-xref>(<var>name</var>) is not String, throw a <emu-val>TypeError</emu-val> exception.</li><li>If the <emu-xref href="#string-concatenation"><a href="https://tc39.es/ecma262/#string-concatenation">string-concatenation</a></emu-xref> of <emu-val>"%"</emu-val>, <var>name</var>, and <emu-val>"%"</emu-val> would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>, and that intrinsic is listed as being "Directly Accessible to ECMAScript Code", then<ol><li>Return that intrinsic.</li></ol></li><li>Throw a <emu-val>TypeError</emu-val> exception.</li></ol></emu-alg>
       <emu-note><span class="note">Note</span><div class="note-contents">
         When the <var>name</var> string succeeds in producing an intrinsic, the <var>name</var> string surrounded by <emu-val>"%"</emu-val> matches the intrinsic notation described in the specification in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>.
       </div></emu-note>

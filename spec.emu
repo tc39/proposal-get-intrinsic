@@ -1,13 +1,72 @@
 <!doctype html>
-<meta charset="utf8">
-<link rel="stylesheet" href="./spec.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
-<script src="./spec.js"></script>
+<meta charset="utf8" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css" />
 <pre class="metadata">
 title: Get Intrinsic
 stage: 1
 contributors: Jordan Harband
 </pre>
+
+<emu-clause number="6" id="sec-ecmascript-data-types-and-values" aoid="Type">
+  <h1>ECMAScript Data Types and Values</h1>
+
+  <emu-clause id="sec-ecmascript-language-types" number="1">
+    <h1>ECMAScript Language Types</h1>
+
+    <emu-clause id="sec-object-type" number="7">
+      <h1>The <dfn variants="is an Object,is not an Object">Object Type</dfn></h1>
+
+      <emu-clause id="sec-well-known-intrinsic-objects" number="4">
+        <h1>Well-Known Intrinsic Objects</h1>
+        <p>Well-known intrinsics are built-in objects that are explicitly referenced by the algorithms of this specification and which usually have realm-specific identities. Unless otherwise specified each intrinsic object actually corresponds to a set of similar objects, one per realm.</p>
+        <p>Within this specification a reference such as %name% means the intrinsic object, associated with the current realm, corresponding to the name. A reference such as %name.a.b% means, as if the *"b"* property of the value of the *"a"* property of the intrinsic object %name% was accessed prior to any ECMAScript code being evaluated. Determination of the current realm and its intrinsics is described in <emu-xref href="#sec-execution-contexts"></emu-xref>. The well-known intrinsics are listed in <emu-xref href="#table-well-known-intrinsic-objects"></emu-xref>.</p>
+        <emu-table id="table-well-known-intrinsic-objects" caption="Well-Known Intrinsic Objects" oldids="table-7">
+          <table>
+            <tr>
+              <th>
+                Intrinsic Name
+              </th>
+              <th>
+                Global Name
+              </th>
+              <th>
+                ECMAScript Language Association
+              </th>
+              <th>
+                <ins>Directly Accessible to ECMAScript code</ins>
+              </th>
+            </tr>
+            <tr>
+              <td>
+                %AggregateError%
+              </td>
+              <td>
+                `AggregateError`
+              </td>
+              <td>
+                The `AggregateError` constructor (<emu-xref href="#sec-aggregate-error-constructor"></emu-xref>)
+              </td>
+              <td />
+            </tr>
+            <tr>
+              <td>
+                %ForInIteratorPrototype%
+              </td>
+              <td>
+              </td>
+              <td>
+                The prototype of For-In iterator objects (<emu-xref href="#sec-for-in-iterator-objects"></emu-xref>)
+              </td>
+              <td align="center">
+                <ins>No</ins>
+              </td>
+            </tr>
+          </table>
+        </emu-table>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
 
 <emu-clause id="sec-value-properties-of-the-global-object" number="19">
   <h1>Value Properties of the Global Object</h1>
@@ -21,7 +80,7 @@ contributors: Jordan Harband
       <p>The `getIntrinsic` function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the `getIntrinsic` function is called with one argument _name_, the following steps are taken:</p>
       <emu-alg>
         1. If Type(_name_) is not String, throw a *TypeError* exception.
-        1. If the string-concatenation of *"%"*, _name_, and *"%"* would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>, then
+        1. If the string-concatenation of *"%"*, _name_, and *"%"* would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>, and that intrinsic is listed as being "Directly Accessible to ECMAScript Code", then
           1. Return that intrinsic.
         1. Throw a *TypeError* exception.
       </emu-alg>
