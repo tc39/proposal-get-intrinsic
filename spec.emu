@@ -68,6 +68,49 @@ contributors: Jordan Harband
   </emu-clause>
 </emu-clause>
 
+<emu-clause id="sec-abstract-operations" number="7">
+  <h1>Abstract Operations</h1>
+
+  <emu-clause id="sec-miscellaneous" number="5">
+    <h1>Miscellaneous</h1>
+
+    <emu-clause id="sec-split-intrinsic-path" type="abstract operation">
+      <h1>
+        SplitIntrinsicPath(
+          _path_: a String
+        ): either a normal completion containing a List of either Strings or Symbols, or a throw completion
+      </h1>
+      <dl class="header">
+      </dl>
+      <p>`SplitIntrinsicPath` takes a path like `a.b.c` or `a.b[Symbol.c]`, and splits it into a List containing each part.</p>
+      <emu-note type="editor">This algorithm may be more simply expressed as a parsing grammar, but for now I went with this approach.</emu-note>
+      <emu-alg>
+        1. Let _parts_ be a new empty List.
+        1. Let _index_ be 0.
+        1. Let _len_ be the length of _path_.
+        1. While _index_ &lt; _len_,
+          1. Let _dotOrBracket_ be the index into _path_, starting at _index_, that contains either *"."* or *"["*.
+          1. If _dotOrBracket_ = _index_, throw a *TypeError* exception.
+          1. If ! Get(_path_, _dotOrBracket_) is *"."*, then
+            1. Let _part_ be the substring of _path_ from _index_ to _dotOrBracket_.
+            1. Let _index_ be _dotOrBracket_ + 1.
+            1. If _part_ is *""* or *"__proto__"*, throw a *TypeError* exception.
+            1. If _part_ is *"constructor"* or *"name"* or *"length"*, and _index_ &gte; _len_, throw a *TypeError* exception.
+            1. Append _part_ to _parts_.
+          1. Else,
+            1. Let _closeBracket_ be the index into _path_, starting at _dotOrBracket_, that contains *"]"*.
+            1. If _closeBracket_ is -1, throw a *TypeError* exception.
+            1. Let _part_ be the substring of _path_ from _dotOrBracket_ + 1 to _closeBracket_.
+            1. If _part_ does not match the [[Description]] column of any row in <emu-xref href="#table-well-known-symbols"></emu-xref>, throw a *TypeError* exception.
+            1. Let _symbol_ be the value that matches the [[Description]] column in <emu-xref href="#table-well-known-symbols"></emu-xref>.
+            1. Let _index_ be _closeBracket_ + 1.
+            1. If _index_ &lt; _len_, throw a *TypeError* exception.
+            1. Append _symbol_ to _parts_.
+        1. Return _parts_.
+      </emu-alg>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
 <emu-clause id="sec-value-properties-of-the-global-object" number="19">
   <h1>Value Properties of the Global Object</h1>
 
@@ -80,8 +123,21 @@ contributors: Jordan Harband
       <p>The `getIntrinsic` function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the `getIntrinsic` function is called with one argument _name_, the following steps are taken:</p>
       <emu-alg>
         1. If Type(_name_) is not String, throw a *TypeError* exception.
+        1. Let _kind_ be ~data~.
+        1. If _name_ starts with "get ",
+          1. Let _kind_ be ~getter~.
+        1. Else if _name_ starts with "set ",
+          1. Let _kind_ be ~setter~.
+        1. If _kind_ is not ~data~, then
+          1. Let _name_ be the substring of _name_ from 4.
+        1. Let _parts_ be ? SplitIntrinsicPath(_name_).
         1. If the string-concatenation of *"%"*, _name_, and *"%"* would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>, and that intrinsic is listed as being "Directly Accessible to ECMAScript Code", then
-          1. Return that intrinsic.
+          1. If _kind_ is ~data~, and the intrinsic describes a data property,
+            1. Return that intrinsic.
+          1. Else if _kind_ is ~getter~, and the intrinsic describes an accessor property,
+            1. Return that accessor property’s [[Get]] function.
+          1. Else if _kind_ is ~setter~, and the intrinsic describes an accessor property,
+            1. Return that accessor property’s [[Set]] function.
         1. Throw a *TypeError* exception.
       </emu-alg>
       <emu-note>
@@ -101,3 +157,4 @@ contributors: Jordan Harband
     </emu-clause>
   </emu-clause>
 </emu-clause>
+
