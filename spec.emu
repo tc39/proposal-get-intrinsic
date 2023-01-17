@@ -87,39 +87,93 @@ contributors: Jordan Harband
   <emu-clause id="sec-miscellaneous" number="5">
     <h1>Miscellaneous</h1>
 
-    <emu-clause id="sec-split-intrinsic-path" type="abstract operation">
+    <emu-clause id="sec-host-added-intrinsics" type="host-defined abstract operation">
       <h1>
-        SplitIntrinsicPath(
-          _path_: a String
-        ): either a normal completion containing a List of either Strings or Symbols, or a throw completion
+        HostAddedIntrinsics(
+        ): a List of Records
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It allows host environments to provide additional intrinsics for `getIntrinsics` to expose.</dd>
+      </dl>
+      <p>An implementation of HostAddedIntrinsics must conform to the following requirements:</p>
+      <ul>
+        <li>Every item in the returned list must be a Record with fields [[Key]] (the intrinsic name) and [[Value]] (the intrinsic value itself).</li>
+        <li>An intrinsic name that describes a data property must have no prefix.</li>
+        <li>An intrinsic name that describes an accessor property must have the prefix *"get "* or *"set "*.</li>
+        <li>Every call to this abstract operation must return the same List contents, in the same order.</li>
+      </ul>
+      <p>The default implementation of HostAddedIntrinsics is to return an empty List.</p>
+    </emu-clause>
+
+    <emu-clause id="sec-get-intrinsics-map" type="abstract operation">
+      <h1>
+        GetIntrinsicsMap(
+        ): a Map
       </h1>
       <dl class="header">
       </dl>
-      <p>`SplitIntrinsicPath` takes a path like `a.b.c` or `a.b[Symbol.c]`, and splits it into a List containing each part.</p>
-      <emu-note type="editor">This algorithm may be more simply expressed as a parsing grammar, but for now I went with this approach.</emu-note>
+      <p>`GetIntrinsicsMap` returns a Map object. This Map is not directly observable from ECMAScript code.</p>
       <emu-alg>
-        1. Let _parts_ be a new empty List.
-        1. Let _index_ be 0.
-        1. Let _len_ be the length of _path_.
-        1. While _index_ &lt; _len_,
-          1. Let _dotOrBracket_ be the index into _path_, starting at _index_, that contains either *"."* or *"["*.
-          1. If _dotOrBracket_ = _index_, throw a *TypeError* exception.
-          1. If ! Get(_path_, _dotOrBracket_) is *"."*, then
-            1. Let _part_ be the substring of _path_ from _index_ to _dotOrBracket_.
-            1. Let _index_ be _dotOrBracket_ + 1.
-            1. If _part_ is *""* or *"__proto__"*, throw a *TypeError* exception.
-            1. If _part_ is *"constructor"* or *"name"* or *"length"*, and _index_ &gte; _len_, throw a *TypeError* exception.
-            1. Append _part_ to _parts_.
-          1. Else,
-            1. Let _closeBracket_ be the index into _path_, starting at _dotOrBracket_, that contains *"]"*.
-            1. If _closeBracket_ is -1, throw a *TypeError* exception.
-            1. Let _part_ be the substring of _path_ from _dotOrBracket_ + 1 to _closeBracket_.
-            1. If _part_ does not match the [[Description]] column of any row in <emu-xref href="#table-well-known-symbols"></emu-xref>, throw a *TypeError* exception.
-            1. Let _symbol_ be the value that matches the [[Description]] column in <emu-xref href="#table-well-known-symbols"></emu-xref>.
-            1. Let _index_ be _closeBracket_ + 1.
-            1. If _index_ &lt; _len_, throw a *TypeError* exception.
-            1. Append _symbol_ to _parts_.
-        1. Return _parts_.
+          1. Let _intrinsics_ be a new empty List.
+          1. For each _baseIntrinsic_ of each intrinsic name listed in <emu-xref href="#sec-well-known-intrinsic-objects"></emu-xref>,
+            1. Append Record { [[Key]]: _baseIntrinsic_, [[Value]]: that intrinsic } to _intrinsics_.
+            1. Let _nestedIntrinsics_ be a new empty List.
+            1. For each intrinsic _intrinsic_ that would be accessible from the value represented by _baseIntrinsic_ in a new realm prior to any ECMAScript code being evaluated,
+              1. TODO: figure this part out, include get/set prefixes
+              1. Append Record { [[Key]]: _intrinsic_, [[Value]]: ??? } to _nestedIntrinsics_.
+            1. Sort _nestedIntrinsics_ in alphabetical order, based on the [[Key]] field of each Record.
+            1. Append the contents of _nestedIntrinsics_ to _intrinsics_.
+          1. Let _hostIntrinsics_ be HostAddedIntrinsics().
+          1. Let _map_ be ! OrdinaryCreateFromConstructor(%Map%, "%Map.prototype%", « [[MapData]] »).
+          1. Set _map_.[[MapData]] to the list-concatenation of _intrinsics_ and _hostIntrinsics_.
+          1. Return _map_.
+      </emu-alg>
+    </emu-clause>
+
+    <emu-clause id="sec-create-intrinsics-iterator" type="abstract operation">
+      <h1>
+        CreateIntrinsicsIterator(
+        ): a Generator
+      </h1>
+      <dl class="header">
+      </dl>
+      <emu-alg>
+        1. Return ! CreateMapIterator(GetIntrinsicsMap(), ~key~).
+      </emu-alg>
+    </emu-clause>
+
+    <emu-clause id="sec-map-get" type="abstract operation">
+      <h1>
+        MapGet(
+          _map_: a Map,
+          _key_: an ECMAScript language value,
+        ): a Boolean
+      </h1>
+      <dl class="header">
+      </dl>
+      <emu-alg>
+        1. Let _entries_ be the List that is _map_.[[MapData]].
+        1. For each Record { [[Key]], [[Value]] } _p_ of _entries_, do
+          1. If _p_.[[Key]] is not ~empty~ and SameValueZero(_p_.[[Key]], _key_) is *true*, return _p_.[[Value]].
+        1. Return *undefined*.
+      </emu-alg>
+    </emu-clause>
+
+    <emu-clause id="sec-map-has" type="abstract operation">
+      <h1>
+        MapHas(
+          _map_: a Map,
+          _key_: an ECMAScript language value,
+        ): a Boolean
+      </h1>
+      <dl class="header">
+      </dl>
+      <emu-alg>
+        1. Let _entries_ be the List that is _map_.[[MapData]].
+        1. For each Record { [[Key]], [[Value]] } _p_ of _entries_, do
+          1. If _p_.[[Key]] is not ~empty~ and SameValueZero(_p_.[[Key]], _key_) is *true*, return *true*.
+        1. Return *false*.
       </emu-alg>
     </emu-clause>
   </emu-clause>
@@ -135,23 +189,12 @@ contributors: Jordan Harband
       <ins class="block">
       <p>The `getIntrinsic` function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the `getIntrinsic` function is called with one argument _name_, the following steps are taken:</p>
       <emu-alg>
+        1. If _name_ is not present, return CreateIntrinsicsIterator().
         1. If Type(_name_) is not String, throw a *TypeError* exception.
-        1. Let _kind_ be ~data~.
-        1. If _name_ starts with "get ",
-          1. Let _kind_ be ~getter~.
-        1. Else if _name_ starts with "set ",
-          1. Let _kind_ be ~setter~.
-        1. If _kind_ is not ~data~, then
-          1. Let _name_ be the substring of _name_ from 4.
-        1. Let _parts_ be ? SplitIntrinsicPath(_name_).
-        1. If the string-concatenation of *"%"*, _name_, and *"%"* would match an intrinsic according to the notation described in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>, and that intrinsic is listed as being "Directly Accessible to ECMAScript Code", then
-          1. If _kind_ is ~data~, and the intrinsic describes a data property,
-            1. Return that intrinsic.
-          1. Else if _kind_ is ~getter~, and the intrinsic describes an accessor property,
-            1. Return that accessor property’s [[Get]] function.
-          1. Else if _kind_ is ~setter~, and the intrinsic describes an accessor property,
-            1. Return that accessor property’s [[Set]] function.
-        1. Throw a *TypeError* exception.
+        1. Let _map_ be GetIntrinsicsMap().
+        1. If MapHas(_map_) is *false*, then
+          1. Throw a *TypeError* exception.
+        1. Return MapGet(_map_, _name_).
       </emu-alg>
       <emu-note>
         When the _name_ string succeeds in producing an intrinsic, the _name_ string surrounded by *"%"* matches the intrinsic notation described in the specification in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>.
@@ -171,3 +214,40 @@ contributors: Jordan Harband
   </emu-clause>
 </emu-clause>
 
+<emu-clause id="#sec-keyed-collections" number="24">
+  <h1>Keyed Collections</h1>
+  <emu-clause id="#sec-map-objects">
+    <h1>Map Objects</h1>
+    <emu-clause id="#sec-properties-of-the-map-prototype-object" number="3">
+      <h1>Properties of the Map Prototype Object</h1>
+
+      <emu-clause id="#sec-map.prototype.get" number="6">
+        <h1>Map.prototype.get ( _key_ )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _M_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_M_, [[MapData]]).
+          1. <ins>Return MapGet(_M_, _key_).</ins>
+          1. <del>Let _entries_ be the List that is _M_.[[MapData]].</del>
+          1. <del>For each Record { [[Key]], [[Value]] } _p_ of _entries_, do</del>
+            1. <del>If _p_.[[Key]] is not ~empty~ and SameValueZero(_p_.[[Key]], _key_) is *true*, return _p_.[[Value]].</del>
+          1. <del>Return *undefined*.</del>
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="#sec-map.prototype.has" number="7">
+        <h1>Map.prototype.has ( _key_ )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _M_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_M_, [[MapData]]).
+          1. <ins>Return MapHas(_M_, _key_).</ins>
+          1. <del>Let _entries_ be the List that is _M_.[[MapData]].</del>
+          1. <del>For each Record { [[Key]], [[Value]] } _p_ of _entries_, do</del>
+            1. <del>If _p_.[[Key]] is not ~empty~ and SameValueZero(_p_.[[Key]], _key_) is *true*, return _p_.[[Value]].</del>
+          1. <del>Return *undefined*.</del>
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
