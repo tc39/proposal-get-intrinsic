@@ -50,6 +50,19 @@ contributors: Jordan Harband
             </tr>
             <tr>
               <td>
+                %AsyncFromSyncIteratorPrototype%
+              </td>
+              <td>
+              </td>
+              <td>
+                The prototype of async-from-sync iterator objects (<emu-xref href="#sec-async-from-sync-iterator-objects"></emu-xref>)
+              </td>
+              <td align="center">
+                <ins>No</ins>
+              </td>
+            </tr>
+            <tr>
+              <td>
                 %ForInIteratorPrototype%
               </td>
               <td>
