@@ -1227,33 +1227,123 @@ window.addEventListener('beforeunload', () => {
 });
 
 'use strict';
-let decimalBullet = Array.from({ length: 100 }, (a, i) => '' + (i + 1));
-let alphaBullet = Array.from({ length: 26 }, (a, i) => String.fromCharCode('a'.charCodeAt(0) + i));
 
-// prettier-ignore
-let romanBullet = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx', 'xxi', 'xxii', 'xxiii', 'xxiv', 'xxv'];
-// prettier-ignore
-let bullets = [decimalBullet, alphaBullet, romanBullet, decimalBullet, alphaBullet, romanBullet];
+// Manually prefix algorithm step list items with hidden counter representations
+// corresponding with their markers so they get selected and copied with content.
+// We read list-style-type to avoid divergence with the style sheet, but
+// for efficiency assume that all lists at the same nesting depth use the same
+// style (except for those associated with replacement steps).
+// We also precompute some initial items for each supported style type.
+// https://w3c.github.io/csswg-drafts/css-counter-styles/
 
-function addStepNumberText(ol, parentIndex) {
-  for (let i = 0; i < ol.children.length; ++i) {
-    let child = ol.children[i];
-    let index = parentIndex.concat([i]);
-    let applicable = bullets[Math.min(index.length - 1, 5)];
-    let span = document.createElement('span');
-    span.textContent = (applicable[i] || '?') + '. ';
-    span.style.fontSize = '0';
-    span.setAttribute('aria-hidden', 'true');
-    child.prepend(span);
-    let sublist = child.querySelector('ol');
-    if (sublist != null) {
-      addStepNumberText(sublist, index);
+const lowerLetters = Array.from({ length: 26 }, (_, i) =>
+  String.fromCharCode('a'.charCodeAt(0) + i)
+);
+// Implement the lower-alpha 'alphabetic' algorithm,
+// adjusting for indexing from 0 rather than 1.
+// https://w3c.github.io/csswg-drafts/css-counter-styles/#simple-alphabetic
+// https://w3c.github.io/csswg-drafts/css-counter-styles/#alphabetic-system
+const lowerAlphaTextForIndex = i => {
+  let S = '';
+  for (const N = lowerLetters.length; i >= 0; i--) {
+    S = lowerLetters[i % N] + S;
+    i = Math.floor(i / N);
+  }
+  return S;
+};
+
+const weightedLowerRomanSymbols = Object.entries({
+  m: 1000,
+  cm: 900,
+  d: 500,
+  cd: 400,
+  c: 100,
+  xc: 90,
+  l: 50,
+  xl: 40,
+  x: 10,
+  ix: 9,
+  v: 5,
+  iv: 4,
+  i: 1,
+});
+// Implement the lower-roman 'additive' algorithm,
+// adjusting for indexing from 0 rather than 1.
+// https://w3c.github.io/csswg-drafts/css-counter-styles/#simple-numeric
+// https://w3c.github.io/csswg-drafts/css-counter-styles/#additive-system
+const lowerRomanTextForIndex = i => {
+  let value = i + 1;
+  let S = '';
+  for (const [symbol, weight] of weightedLowerRomanSymbols) {
+    if (!value) break;
+    if (weight > value) continue;
+    const reps = Math.floor(value / weight);
+    S += symbol.repeat(reps);
+    value -= weight * reps;
+  }
+  return S;
+};
+
+// Memoize pure index-to-text functions with an exposed cache for fast retrieval.
+const makeCounter = (pureGetTextForIndex, precomputeCount = 30) => {
+  const cache = Array.from({ length: precomputeCount }, (_, i) => pureGetTextForIndex(i));
+  const getTextForIndex = i => {
+    if (i >= cache.length) cache[i] = pureGetTextForIndex(i);
+    return cache[i];
+  };
+  return { getTextForIndex, cache };
+};
+
+const counterByStyle = {
+  __proto__: null,
+  decimal: makeCounter(i => String(i + 1)),
+  'lower-alpha': makeCounter(lowerAlphaTextForIndex),
+  'upper-alpha': makeCounter(i => lowerAlphaTextForIndex(i).toUpperCase()),
+  'lower-roman': makeCounter(lowerRomanTextForIndex),
+  'upper-roman': makeCounter(i => lowerRomanTextForIndex(i).toUpperCase()),
+};
+const fallbackCounter = makeCounter(() => '?');
+const counterByDepth = [];
+
+function addStepNumberText(
+  ol,
+  depth = 0,
+  special = [...ol.classList].some(c => c.startsWith('nested-'))
+) {
+  let counter = !special && counterByDepth[depth];
+  if (!counter) {
+    const counterStyle = getComputedStyle(ol)['list-style-type'];
+    counter = counterByStyle[counterStyle];
+    if (!counter) {
+      console.warn('unsupported list-style-type', {
+        ol,
+        counterStyle,
+        id: ol.closest('[id]')?.getAttribute('id'),
+      });
+      counterByStyle[counterStyle] = fallbackCounter;
+      counter = fallbackCounter;
+    }
+    if (!special) {
+      counterByDepth[depth] = counter;
     }
   }
+  const { cache, getTextForIndex } = counter;
+  let i = (Number(ol.getAttribute('start')) || 1) - 1;
+  for (const li of ol.children) {
+    const marker = document.createElement('span');
+    marker.textContent = `${i < cache.length ? cache[i] : getTextForIndex(i)}. `;
+    marker.setAttribute('aria-hidden', 'true');
+    li.prepend(marker);
+    for (const sublist of li.querySelectorAll(':scope > ol')) {
+      addStepNumberText(sublist, depth + 1, special);
+    }
+    i++;
+  }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('emu-alg > ol').forEach(ol => {
-    addStepNumberText(ol, []);
+    addStepNumberText(ol);
   });
 });
 
@@ -1448,6 +1538,10 @@ emu-alg ol.nested-lots ol {
   list-style-type: lower-roman;
 }
 
+emu-alg [aria-hidden=true] {
+  font-size: 0;
+}
+
 emu-eqn {
   display: block;
   margin-left: 4em;
@@ -1499,7 +1593,7 @@ emu-note > div.note-contents > p:last-of-type {
   margin-bottom: 0;
 }
 
-emu-table td code {
+emu-table:not(.code) td code {
   white-space: normal;
 }
 
@@ -2523,7 +2617,7 @@ li.menu-search-result-term:before {
 </ul></div><div id="menu-toggle"><svg xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; stroke:currentColor" viewBox="0 0 120 120">
       <title>Menu</title>
       <path stroke-width="10" stroke-linecap="round" d="M30,60 h60  M30,30 m0,5 h60  M30,90 m0,-5 h60"></path>
-    </svg></div><div id="menu-spacer" class="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-ecmascript-data-types-and-values" title="ECMAScript Data Types and Values"><span class="secnum">6</span> ECMAScript Data Types and Values</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-ecmascript-language-types" title="ECMAScript Language Types"><span class="secnum">6.1</span> ECMAScript Language Types</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-object-type" title="The Object Type"><span class="secnum">6.1.7</span> The <dfn variants="is an Object,is not an Object">Object Type</dfn></a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-well-known-intrinsic-objects" title="Well-Known Intrinsic Objects"><span class="secnum">6.1.7.4</span> Well-Known Intrinsic Objects</a></li></ol></li></ol></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-abstract-operations" title="Abstract Operations"><span class="secnum">7</span> Abstract Operations</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-miscellaneous" title="Miscellaneous"><span class="secnum">7.5</span> Miscellaneous</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-split-intrinsic-path" title="SplitIntrinsicPath ( path )"><span class="secnum">7.5.1</span> SplitIntrinsicPath ( <var>path</var> )</a></li></ol></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 1 Draft / January 23, 2023</h1><h1 class="title">Get Intrinsic</h1>
+    </svg></div><div id="menu-spacer" class="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-ecmascript-data-types-and-values" title="ECMAScript Data Types and Values"><span class="secnum">6</span> ECMAScript Data Types and Values</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-ecmascript-language-types" title="ECMAScript Language Types"><span class="secnum">6.1</span> ECMAScript Language Types</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-object-type" title="The Object Type"><span class="secnum">6.1.7</span> The <dfn variants="is an Object,is not an Object">Object Type</dfn></a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-well-known-intrinsic-objects" title="Well-Known Intrinsic Objects"><span class="secnum">6.1.7.4</span> Well-Known Intrinsic Objects</a></li></ol></li></ol></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-abstract-operations" title="Abstract Operations"><span class="secnum">7</span> Abstract Operations</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-miscellaneous" title="Miscellaneous"><span class="secnum">7.5</span> Miscellaneous</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-split-intrinsic-path" title="SplitIntrinsicPath ( path )"><span class="secnum">7.5.1</span> SplitIntrinsicPath ( <var>path</var> )</a></li></ol></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-value-properties-of-the-global-object" title="Value Properties of the Global Object"><span class="secnum">19</span> Value Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-function-properties-of-the-global-object" title="Function Properties of the Global Object"><span class="secnum">19.3</span> Function Properties of the Global Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-getintrinsic" title="getIntrinsic ( name )"><span class="secnum">19.3.2</span> getIntrinsic ( <var>name</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-isfinite-number" title="isFinite ( number )"><span class="secnum">19.3.3</span> isFinite ( <var>number</var> )</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version">Stage 1 Draft / January 30, 2023</h1><h1 class="title">Get Intrinsic</h1>
 
 <emu-clause number="6" id="sec-ecmascript-data-types-and-values" aoid="Type">
   <h1><span class="secnum">6</span> ECMAScript Data Types and Values</h1>
