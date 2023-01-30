@@ -116,8 +116,10 @@ contributors: Jordan Harband
       <p>`GetIntrinsicsMap` returns a Map object. This Map is not directly observable from ECMAScript code.</p>
       <emu-alg>
           1. Let _intrinsics_ be a new empty List.
-          1. For each _baseIntrinsic_ of each intrinsic name listed in <emu-xref href="#sec-well-known-intrinsic-objects"></emu-xref>,
-            1. Append Record { [[Key]]: _baseIntrinsic_, [[Value]]: that intrinsic } to _intrinsics_.
+          1. Let _baseIntrinsics_ be a list of each intrinsic name listed in <emu-xref href="#sec-well-known-intrinsic-objects"></emu-xref>.
+          1. Sort _baseIntrinsics_ alphabetically, with a case-insensitive ordering.
+          1. For each _baseIntrinsic_ of _baseIntrinscs_,
+            1. Append Record { [[Key]]: _baseIntrinsic_, [[Value]]: the referenced intrinsic value } to _intrinsics_.
             1. Let _nestedIntrinsics_ be a new empty List.
             1. For each intrinsic _intrinsic_ that would be accessible from the value represented by _baseIntrinsic_ in a new realm prior to any ECMAScript code being evaluated,
               1. TODO: figure this part out, include get/set prefixes
