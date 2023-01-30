@@ -126,6 +126,8 @@ contributors: Jordan Harband
               1. Append Record { [[Key]]: _intrinsic_, [[Value]]: ??? } to _nestedIntrinsics_.
             1. Sort _nestedIntrinsics_ in alphabetical order, based on the [[Key]] field of each Record.
             1. Append the contents of _nestedIntrinsics_ to _intrinsics_.
+          1. Append Record { [[Key]]: *"globalThis"*, [[Value]]: GetThisBinding() } to _intrinsics_.
+          1. Assert: _intrinsics_ contains exactly one record with the [[Key]] *"globalThis"*.
           1. Let _hostIntrinsics_ be HostAddedIntrinsics().
           1. Let _map_ be ! OrdinaryCreateFromConstructor(%Map%, "%Map.prototype%", « [[MapData]] »).
           1. Set _map_.[[MapData]] to the list-concatenation of _intrinsics_ and _hostIntrinsics_.
