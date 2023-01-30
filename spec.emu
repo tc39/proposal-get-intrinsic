@@ -114,6 +114,7 @@ contributors: Jordan Harband
       <dl class="header">
       </dl>
       <p>`GetIntrinsicsMap` returns a Map object. This Map is not directly observable from ECMAScript code.</p>
+      <emu-note>The returned Map object must be identical on successive calls to this abstract operation.</emu-note>
       <emu-alg>
           1. Let _intrinsics_ be a new empty List.
           1. Let _baseIntrinsics_ be a list of each intrinsic name listed in <emu-xref href="#sec-well-known-intrinsic-objects"></emu-xref>.
@@ -121,9 +122,24 @@ contributors: Jordan Harband
           1. For each _baseIntrinsic_ of _baseIntrinscs_,
             1. Append Record { [[Key]]: _baseIntrinsic_, [[Value]]: the referenced intrinsic value } to _intrinsics_.
             1. Let _nestedIntrinsics_ be a new empty List.
-            1. For each intrinsic _intrinsic_ that would be accessible from the value represented by _baseIntrinsic_ in a new realm prior to any ECMAScript code being evaluated,
-              1. TODO: figure this part out, include get/set prefixes
-              1. Append Record { [[Key]]: _intrinsic_, [[Value]]: ??? } to _nestedIntrinsics_.
+            1. For each intrinsic _intrinsic_ that would be accessible from the value represented by _baseIntrinsic_ in a new realm prior to any ECMAScript code being evaluated, via member access,
+              1. Let _P_ be the property key represented by _intrinsic_.
+              1. Let _X_ be the property represented by _intrinsic_.
+              1. If _P_ is neither *"constructor"* nor *"__proto__"*,
+                1. If _X_ is a data property,
+                  1. Let _value_ be the [[Value]] attribute of _X_.
+                  1. Append Record { [[Key]]: _intrinsic_, [[Value]]: _value_ } to _nestedIntrinsics_.
+                1. Else,
+                  1. Assert: _X_ is an accessor property.
+                  1. Let _get_ be the [[Get]] attribute of _X_.
+                  1. If _get_ is not *undefined*,
+                    1. Let _name_ be the string-concatenation of *"get "* and _intrinsic_.
+                    1. Append Record { [[Key]]: _name_, [[Value]]: _get_ } to _nestedIntrinsics_.
+                  1. Let _set_ be the [[Set]] attribute of _X_.
+                  1. If _set_ is not *undefined*,
+                    1. Let _name_ be the string-concatenation of *"set "* and _intrinsic_.
+                    1. Append Record { [[Key]]: _name_, [[Value]]: _set_ } to _nestedIntrinsics_.
+            1. TODO: find an easy way to sort that ignores the prefixes.
             1. Sort _nestedIntrinsics_ in alphabetical order, based on the [[Key]] field of each Record.
             1. Append the contents of _nestedIntrinsics_ to _intrinsics_.
           1. Append Record { [[Key]]: *"globalThis"*, [[Value]]: GetThisBinding() } to _intrinsics_.
