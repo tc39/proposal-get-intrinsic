@@ -198,41 +198,6 @@ contributors: Jordan Harband
     </emu-clause>
   </emu-clause>
 </emu-clause>
-<emu-clause id="sec-value-properties-of-the-global-object" number="19">
-  <h1>Value Properties of the Global Object</h1>
-
-  <emu-clause id="sec-function-properties-of-the-global-object" number="3">
-    <h1>Function Properties of the Global Object</h1>
-
-    <emu-clause id="sec-getintrinsic" number="2">
-      <h1>getIntrinsic ( _name_ )</h1>
-      <ins class="block">
-      <p>The `getIntrinsic` function is the <dfn>%getIntrinsic%</dfn> intrinsic object. When the `getIntrinsic` function is called with one argument _name_, the following steps are taken:</p>
-      <emu-alg>
-        1. If _name_ is not present, return CreateIntrinsicsIterator().
-        1. If Type(_name_) is not String, throw a *TypeError* exception.
-        1. Let _map_ be GetIntrinsicsMap().
-        1. If MapHas(_map_) is *false*, then
-          1. Throw a *TypeError* exception.
-        1. Return MapGet(_map_, _name_).
-      </emu-alg>
-      <emu-note>
-        When the _name_ string succeeds in producing an intrinsic, the _name_ string surrounded by *"%"* matches the intrinsic notation described in the specification in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>.
-      </emu-note>
-      </ins>
-    </emu-clause>
-
-    <emu-clause id="sec-isfinite-number">
-      <h1>isFinite ( _number_ )</h1>
-      <p>The `isFinite` function is the <dfn>%isFinite%</dfn> intrinsic object. When the `isFinite` function is called with one argument _number_, the following steps are taken:</p>
-      <emu-alg>
-        1. Let _num_ be ? ToNumber(_number_).
-        1. If _num_ is *NaN*, *+&infin;*<sub>𝔽</sub>, or *-&infin;*<sub>𝔽</sub>, return *false*.
-        1. Otherwise, return *true*.
-      </emu-alg>
-    </emu-clause>
-  </emu-clause>
-</emu-clause>
 
 <emu-clause id="#sec-keyed-collections" number="24">
   <h1>Keyed Collections</h1>
@@ -268,6 +233,42 @@ contributors: Jordan Harband
           1. <del>Return *undefined*.</del>
         </emu-alg>
       </emu-clause>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-reflection" number="28">
+  <h1>Reflection</h1>
+
+  <emu-clause id="sec-reflect-object" number="1">
+    <h1>The Reflect Object</h1>
+
+    <emu-clause id="sec-reflect.getintrinsic" number="6">
+      <h1>Reflect.getIntrinsic ( _name_ )</h1>
+      <ins class="block">
+      <p>This function performs the following steps when called:</p>
+      <emu-alg>
+        1. If Type(_name_) is not String, throw a *TypeError* exception.
+        1. Let _map_ be GetIntrinsicsMap().
+        1. If MapHas(_map_) is *false*, then
+          1. Throw a *TypeError* exception.
+        1. Return MapGet(_map_, _name_).
+      </emu-alg>
+
+      <emu-note>
+        When the _name_ string succeeds in producing an intrinsic, the _name_ string surrounded by *"%"* matches the intrinsic notation described in the specification in <a href="https://tc39.es/ecma262/#sec-well-known-intrinsic-objects">Well-Known Intrinsic Objects</a>.
+      </emu-note>
+      </ins>
+    </emu-clause>
+
+    <emu-clause id="sec-reflect.getintrinsics" number="7">
+      <h1>Reflect.getIntrinsics ( )</h1>
+      <ins class="block">
+      <p>This function performs the following steps when called:</p>
+      <emu-alg>
+        1. Return CreateIntrinsicsIterator().
+      </emu-alg>
+      </ins>
     </emu-clause>
   </emu-clause>
 </emu-clause>
