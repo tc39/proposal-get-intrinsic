@@ -60,16 +60,20 @@ The cost of this `get-intrinsic` abstraction is 9.7KB shipped to all browsers th
 
 See also, committee discussion on this proposal in [July 2021](https://github.com/tc39/notes/blob/596ea8e5b199af3bfe578f605066c5b7bd6dd943/meetings/2021-07/july-15.md#getoriginals-for-stage-1).
 
-## Possible Solution
+## Proposed Solution
 
-Provide a new global or static function, `getIntrinsic`, that takes a string argument and effectively replicates the `get-intrinsic` package API, as well as the specification's internal `%a.b.c%` notation. It would return the "original" value being requested.
+Provide a function property on `Reflect`, `getIntrinsic`, that takes a string argument and effectively replicates the `get-intrinsic` package API, but explicitly does not expose the specification's internal `%a.b.c%` notation. It would return the "original" value being requested.
 
 Shims/polyfills that added new methods would of course need to also wrap/replace the `getIntrinsic` function so that it also provided the new methods; "lockdown" libraries like SES would similarly need to wrap/replace the `getIntrinsic` function so it provided whatever forms of these methods it desired.
 
 In modern browsers/engines that ship this API, this cost will reduce to nothing, and the eval/CSP clash will go away.
 
+Additionally, `Reflect.getIntrinsics` is provided, that produces an iterator of "intrinsic names" - each of which can be passed to `Reflect.getIntrinsic` to retrieve the desired value.
+
 ## Spec
-You can view the spec for the globl `getIntrinsic` solution rendered as [HTML](https://tc39.github.io/proposal-get-intrinsic/).
+
+You can view the spec for the `Reflect.getIntrinsic`/`Reflect.getIntrinsics` solution rendered as [HTML](https://tc39.github.io/proposal-get-intrinsic/).
 
 ## Implementations
+
 None yet - it would be inappropriate to publish a runtime implementation of a language proposal for API prior to stage 3.
